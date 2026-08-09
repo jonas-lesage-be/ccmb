@@ -77,8 +77,8 @@ func (m *Merger) createWatermark(flatName, ext string) (*pdfcpu_model.Watermark,
 	)
 	headerText := "Path: " + originalPath
 
-	if strings.Contains(flatName, "--frame_") {
-		before, after, _ := strings.Cut(flatName, "--frame_")
+	if strings.Contains(flatName, m.FlatPathDelimiter+"frame_") {
+		before, after, _ := strings.Cut(flatName, m.FlatPathDelimiter+"frame_")
 		cleanPath := config.DecodeFlatName(
 			before,
 			m.EscapedDelimiter,

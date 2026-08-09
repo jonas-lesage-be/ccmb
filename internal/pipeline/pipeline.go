@@ -7,6 +7,7 @@ import (
 	"ccmb/internal/config"
 	"ccmb/internal/filter"
 	"ccmb/internal/flattener"
+	"ccmb/internal/image"
 	"ccmb/internal/textmerge"
 	"ccmb/internal/video"
 	"ccmb/internal/visualmerge"
@@ -17,6 +18,7 @@ type pipelineStep int
 const (
 	flattenerStep pipelineStep = iota
 	filterStep
+	imageConverterStep
 	videoExtractorStep
 	visualMergerStep
 	textMergerStep
@@ -28,6 +30,8 @@ func (p pipelineStep) String() string {
 		return "Flattener"
 	case filterStep:
 		return "Filter"
+	case imageConverterStep:
+		return "Image converter"
 	case videoExtractorStep:
 		return "Video extractor"
 	case visualMergerStep:
@@ -39,7 +43,7 @@ func (p pipelineStep) String() string {
 	}
 }
 
-// Execute runs the entire processing pipeline based on the provided configuration.
+// Execute runs the entire pipeline based on the provided configuration.
 func Execute(cfg *config.Config) {
 	ctx := context.Background()
 	log.Printf("Pipeline initialized. Source: %s | Target: %s\n", cfg.SourceDir, cfg.TargetDir)
@@ -57,18 +61,24 @@ func Execute(cfg *config.Config) {
 	})
 
 	// Execution step 3
+	runIf(cfg.RunImageConverter, imageConverterStep, func() error {
+		c := image.NewConverter(cfg)
+		return c.Execute(ctx)
+	})
+
+	// Execution step 4
 	runIf(cfg.RunVideoExtractor, videoExtractorStep, func() error {
 		e := video.NewExtractor(cfg)
 		return e.Execute(ctx)
 	})
 
-	// Execution step 4
+	// Execution step 5
 	runIf(cfg.RunVisualMerger, visualMergerStep, func() error {
 		merger := visualmerge.NewMerger(cfg)
 		return merger.Execute(ctx)
 	})
 
-	// Execution step 5
+	// Execution step 6
 	runIf(cfg.RunTextMerger, textMergerStep, func() error {
 		merger := textmerge.NewMerger(cfg)
 		return merger.Execute(ctx)

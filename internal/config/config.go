@@ -12,18 +12,22 @@ import (
 // Config holds the configuration settings for the application.
 type Config struct {
 	MaxFlattenerWorkerCount int
+	MaxImageWorkerCount     int
 	MaxVideoWorkerCount     int
 
-	EstFileCount        int
-	FlatPathDelimiter   string
-	EscapedDelimiter    string
-	DecodePlaceholder   string
-	VideoExtractTimeout time.Duration
+	EstFileCount      int
+	FlatPathDelimiter string
+	EscapedDelimiter  string
+	DecodePlaceholder string
 
-	FilterExtensions map[string]bool
-	ImageExtensions  map[string]bool
-	VideoExtensions  map[string]bool
-	VisualExtensions map[string]bool
+	ImageConversionTimeout time.Duration
+	VideoExtractTimeout    time.Duration
+
+	FilterExtensions         map[string]bool
+	ImageExtensions          map[string]bool
+	SupportedImageExtensions map[string]bool
+	VideoExtensions          map[string]bool
+	VisualExtensions         map[string]bool
 
 	MaxZIPFileBytes  int64
 	MaxPDFFileBytes  int64
@@ -36,6 +40,7 @@ type Config struct {
 
 	RunFlattener      bool
 	RunFilter         bool
+	RunImageConverter bool
 	RunVideoExtractor bool
 	RunVisualMerger   bool
 	RunTextMerger     bool
@@ -43,17 +48,21 @@ type Config struct {
 
 const (
 	defaultMaxFlattenerWorkerCount = 8
+	defaultMaxImageWorkerCount     = 8
 	defaultMaxVideoWorkerCount     = 4
 
-	defaultEstFileCount        = 128
-	defaultFlatPathDelimiter   = "--"
-	defaultDecodePlaceholder   = "\x00"
-	defaultVideoExtractTimeout = 1 * time.Minute
+	defaultEstFileCount      = 128
+	defaultFlatPathDelimiter = "--"
+	defaultDecodePlaceholder = "\x00"
 
-	defaultFilterExtensions = ".ttf,.woff,.woff2"
-	defaultImageExtensions  = ".jpg,.jpeg,.png,.webp,.tif,.tiff"
-	defaultVideoExtensions  = "nil"
-	defaultVisualExtensions = ".pdf," + defaultImageExtensions
+	defaultImageConversionTimeout = 15 * time.Second
+	defaultVideoExtractTimeout    = 1 * time.Minute
+
+	defaultFilterExtensions         = ".ttf,.woff,.woff2"
+	defaultImageExtensions          = "nil"
+	defaultSupportedImageExtensions = ".jpg,.jpeg,.png,.webp,.tif,.tiff"
+	defaultVideoExtensions          = "nil"
+	defaultVisualExtensions         = ".pdf," + defaultSupportedImageExtensions
 
 	defaultMaxZIPFileBytes  int64 = 4 * conv.GiB
 	defaultMaxPDFFileBytes  int64 = 128 * conv.MiB
@@ -66,6 +75,7 @@ const (
 
 	defaultRunFlattener      = true
 	defaultRunFilter         = true
+	defaultRunImageConverter = true
 	defaultRunVideoExtractor = true
 	defaultRunVisualMerger   = true
 	defaultRunTextMerger     = true
@@ -80,16 +90,23 @@ func Load() *Config {
 			"MAX_FLATTENER_WORKER_COUNT",
 			defaultMaxFlattenerWorkerCount,
 		),
+		MaxImageWorkerCount: EnvOr("MAX_IMAGE_WORKER_COUNT", defaultMaxImageWorkerCount),
 		MaxVideoWorkerCount: EnvOr("MAX_VIDEO_WORKER_COUNT", defaultMaxVideoWorkerCount),
 
-		EstFileCount:        EnvOr("EST_FILE_COUNT", defaultEstFileCount),
-		FlatPathDelimiter:   filePathDelimiter,
-		EscapedDelimiter:    EnvOr("ESCAPED_DELIMITER", filePathDelimiter+filePathDelimiter),
-		DecodePlaceholder:   EnvOr("DECODE_PLACEHOLDER", defaultDecodePlaceholder),
-		VideoExtractTimeout: EnvOr("VIDEO_EXTRACT_TIMEOUT", defaultVideoExtractTimeout),
+		EstFileCount:      EnvOr("EST_FILE_COUNT", defaultEstFileCount),
+		FlatPathDelimiter: filePathDelimiter,
+		EscapedDelimiter:  EnvOr("ESCAPED_DELIMITER", filePathDelimiter+filePathDelimiter),
+		DecodePlaceholder: EnvOr("DECODE_PLACEHOLDER", defaultDecodePlaceholder),
+
+		ImageConversionTimeout: EnvOr("IMAGE_CONVERSION_TIMEOUT", defaultImageConversionTimeout),
+		VideoExtractTimeout:    EnvOr("VIDEO_EXTRACT_TIMEOUT", defaultVideoExtractTimeout),
 
 		FilterExtensions: EnvMapOr("FILTER_EXTENSIONS", defaultFilterExtensions),
 		ImageExtensions:  EnvMapOr("IMAGE_EXTENSIONS", defaultImageExtensions),
+		SupportedImageExtensions: EnvMapOr(
+			"SUPPORTED_IMAGE_EXTENSIONS",
+			defaultSupportedImageExtensions,
+		),
 		VideoExtensions:  EnvMapOr("VIDEO_EXTENSIONS", defaultVideoExtensions),
 		VisualExtensions: EnvMapOr("VISUAL_EXTENSIONS", defaultVisualExtensions),
 
@@ -104,6 +121,7 @@ func Load() *Config {
 
 		RunFlattener:      EnvOr("RUN_FLATTENER", defaultRunFlattener),
 		RunFilter:         EnvOr("RUN_FILTER", defaultRunFilter),
+		RunImageConverter: EnvOr("RUN_IMAGE_CONVERTER", defaultRunImageConverter),
 		RunVideoExtractor: EnvOr("RUN_VIDEO_EXTRACTOR", defaultRunVideoExtractor),
 		RunVisualMerger:   EnvOr("RUN_VISUAL_MERGER", defaultRunVisualMerger),
 		RunTextMerger:     EnvOr("RUN_TEXT_MERGER", defaultRunTextMerger),

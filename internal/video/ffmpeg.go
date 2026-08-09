@@ -7,9 +7,11 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"ccmb/internal/media"
 )
 
-func (e *Extractor) shouldProcessVideo(ctx context.Context, fullPath string) bool {
+func (e *Extractor) shouldProcess(ctx context.Context, fullPath string) bool {
 	isVideo, err := e.checkIsVideo(ctx, fullPath)
 	if err != nil {
 		return false
@@ -29,32 +31,19 @@ func (e *Extractor) checkIsVideo(ctx context.Context, fullPath string) (bool, er
 	ctx, cancel := context.WithTimeout(ctx, e.VideoExtractTimeout)
 	defer cancel()
 
-	//nolint:gosec
-	cmd := exec.CommandContext(
-		ctx,
-		"ffprobe",
-		"-v", "error",
-		"-show_streams",
-		"-select_streams", "v", // Only select video streams.
-		"-show_entries", "stream=index", // Only output the stream index.
-		"-of", "default=noprint_wrappers=1:nokey=1", // Strip the output.
-		fullPath,
-	)
-
-	output, err := cmd.Output()
+	frameCount, err := media.FrameCount(ctx, fullPath)
 	if err != nil {
-		return false, fmt.Errorf("ffprobe command failed: %w", err)
+		return false, fmt.Errorf("failed to check if file is a video: %w", err)
 	}
 
-	cleanOutput := strings.TrimSpace(string(output))
-	return cleanOutput != "", nil
+	return frameCount > 1, nil
 }
 
-func (e *Extractor) extractFrames(ctx context.Context, videoPath string) error {
-	baseName := strings.TrimSuffix(filepath.Base(videoPath), filepath.Ext(videoPath))
-	outputPattern := filepath.Join(e.TargetDir, baseName+"--frame_%d.jpg")
+func (e *Extractor) extractFrames(ctx context.Context, filePath string) error {
+	baseName := strings.TrimSuffix(filepath.Base(filePath), filepath.Ext(filePath))
+	outputPattern := filepath.Join(e.TargetDir, baseName+e.FlatPathDelimiter+"frame_%d.jpg")
 
-	log.Printf("Running FFmpeg wrapper onto: %s\n", filepath.Base(videoPath))
+	log.Printf("Running FFmpeg wrapper onto: %s\n", filepath.Base(filePath))
 
 	ctx, cancel := context.WithTimeout(ctx, e.VideoExtractTimeout)
 	defer cancel()
@@ -63,17 +52,24 @@ func (e *Extractor) extractFrames(ctx context.Context, videoPath string) error {
 	cmd := exec.CommandContext(
 		ctx,
 		"ffmpeg",
+		// Use hardware acceleration if available.
 		"-hwaccel", "auto",
+		// No audio and subtitle streams.
 		"-an",
 		"-sn",
-		"-i", videoPath,
+		// Input file.
+		"-i", filePath,
+		// Extract 1 frame per second using variable frame rate mode.
 		"-vf", "fps=1",
 		"-fps_mode", "vfr",
+		// Use high quality.
 		"-q:v", "2",
+		// Use all available threads.
 		"-threads", "0",
-		"-start_number", "0",
-		outputPattern,
+		// Overwrite output file if it exists.
 		"-y",
+		// Output pattern.
+		outputPattern,
 	)
 
 	if err := cmd.Run(); err != nil {

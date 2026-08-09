@@ -17,6 +17,7 @@ import (
 // Extractor is responsible for extracting frames from video files.
 type Extractor struct {
 	MaxVideoWorkerCount int
+	FlatPathDelimiter   string
 	VideoExtractTimeout time.Duration
 	VideoExtensions     map[string]bool
 	TargetDir           string
@@ -31,15 +32,16 @@ type job struct {
 func NewExtractor(cfg *config.Config) *Extractor {
 	return &Extractor{
 		MaxVideoWorkerCount: cfg.MaxVideoWorkerCount,
+		FlatPathDelimiter:   cfg.FlatPathDelimiter,
 		VideoExtractTimeout: cfg.VideoExtractTimeout,
 		VideoExtensions:     cfg.VideoExtensions,
 		TargetDir:           cfg.TargetDir,
 	}
 }
 
-// Execute extracts 1 frame per second using FFmpeg calls.
+// Execute extracts 1 frame per second calls.
 func (e *Extractor) Execute(ctx context.Context) error {
-	log.Println("--- Extracting frames out of videos using FFmpeg ---")
+	log.Println("--- Extracting frames out of videos ---")
 	files, err := os.ReadDir(e.TargetDir)
 	if err != nil {
 		return fmt.Errorf("failed to read target directory: %w", err)
@@ -55,7 +57,7 @@ func (e *Extractor) Execute(ctx context.Context) error {
 
 	for _, j := range jobs {
 		g.Go(func() error {
-			if err := e.processVideoFile(ctx, j.fileName, j.fullPath); err != nil {
+			if err := e.processFile(ctx, j.fileName, j.fullPath); err != nil {
 				return fmt.Errorf("error processing %s: %w", j.fileName, err)
 			}
 			return nil
@@ -87,7 +89,7 @@ func (e *Extractor) jobsToProcess(ctx context.Context, files []os.DirEntry) []jo
 			}
 		} else {
 			fullPath = filepath.Join(e.TargetDir, file.Name())
-			shouldProcess = e.shouldProcessVideo(ctx, fullPath)
+			shouldProcess = e.shouldProcess(ctx, fullPath)
 		}
 
 		if shouldProcess {
@@ -98,9 +100,9 @@ func (e *Extractor) jobsToProcess(ctx context.Context, files []os.DirEntry) []jo
 	return jobs
 }
 
-func (e *Extractor) processVideoFile(ctx context.Context, fileName, fullPath string) error {
+func (e *Extractor) processFile(ctx context.Context, fileName, fullPath string) error {
 	if err := e.extractFrames(ctx, fullPath); err != nil {
-		return fmt.Errorf("FFmpeg failed for %s: %w", fileName, err)
+		return fmt.Errorf("failed to extract frames: %w", err)
 	}
 
 	if err := os.Remove(fullPath); err != nil {
