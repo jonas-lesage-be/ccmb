@@ -75,7 +75,7 @@ func (m *Merger) createWatermark(flatName, ext string) (*pdfcpu_model.Watermark,
 		m.DecodePlaceholder,
 		m.FlatPathDelimiter,
 	)
-	headerText := "Path: " + originalPath
+	headerText := "File path: " + originalPath
 
 	if strings.Contains(flatName, m.FlatPathDelimiter+"frame_") {
 		before, after, _ := strings.Cut(flatName, m.FlatPathDelimiter+"frame_")
@@ -86,12 +86,14 @@ func (m *Merger) createWatermark(flatName, ext string) (*pdfcpu_model.Watermark,
 			m.FlatPathDelimiter,
 		)
 		frameNum := strings.TrimSuffix(after, ext)
-		headerText = fmt.Sprintf("Path: %s frame number %s", cleanPath, frameNum)
+		headerText = fmt.Sprintf("File path: %s frame number %s", cleanPath, frameNum)
 	}
 
+	desc := "pos: tr, off: -6 -6, points: 10, scale: 1.0 abs, rot: 0, mode: 0," +
+		" color: #000000, bgcol: #ffffff, border: 1 #000000, margins: 4"
 	wm, err := pdfcpu.ParseTextWatermarkDetails(
 		headerText,
-		"pos:tl, off:30 -20, points:10, scale:1.0 abs",
+		desc,
 		true,
 		pdfcpu_types.POINTS,
 	)
