@@ -3,6 +3,7 @@ package pipeline
 import (
 	"context"
 	"log"
+	"time"
 
 	"ccmb/internal/config"
 	"ccmb/internal/filter"
@@ -46,7 +47,7 @@ func (p pipelineStep) String() string {
 // Execute runs the entire pipeline based on the provided configuration.
 func Execute(cfg *config.Config) {
 	ctx := context.Background()
-	log.Printf("Pipeline initialized. Source: %s | Target: %s\n", cfg.SourceDir, cfg.TargetDir)
+	log.Printf("Pipeline initialized. Source: %s | Target: %s\n\n", cfg.SourceDir, cfg.TargetDir)
 
 	// Execution step 1
 	runIf(cfg.RunFlattener, flattenerStep, func() error {
@@ -94,10 +95,17 @@ func runIf(shouldRun bool, step pipelineStep, f func() error) {
 
 	log.Printf("=== Running STEP %d: %s ===", step+1, step)
 
+	startTime := time.Now()
 	if err := f(); err != nil {
 		log.Fatalf("Pipeline aborted at step %d (%s): %v", step+1, step, err)
 		return
 	}
+	duration := time.Since(startTime)
 
-	log.Printf("=== STEP %d: %s completed successfully ===", step+1, step)
+	log.Printf(
+		"=== STEP %d: %s completed successfully (Time: %v) ===\n\n",
+		step+1,
+		step,
+		duration,
+	)
 }
