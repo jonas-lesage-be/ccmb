@@ -161,9 +161,17 @@ func (pf *Flattener) copyFileSecure(ctx context.Context, src, dst string) error 
 	if err != nil {
 		return fmt.Errorf("failed to create file %s: %w", dst, err)
 	}
+
+	shouldCleanup := true
 	defer func() {
 		if errClose := out.Close(); errClose != nil {
 			log.Printf("failed to close written file: %v", errClose)
+		}
+
+		if shouldCleanup {
+			if errRemove := os.Remove(dst); errRemove != nil {
+				log.Printf("failed to remove incomplete file %s: %v", dst, errRemove)
+			}
 		}
 	}()
 
@@ -181,6 +189,7 @@ func (pf *Flattener) copyFileSecure(ctx context.Context, src, dst string) error 
 		return fmt.Errorf("failed copying content from %s to %s: %w", src, dst, err)
 	}
 
+	shouldCleanup = false
 	return nil
 }
 

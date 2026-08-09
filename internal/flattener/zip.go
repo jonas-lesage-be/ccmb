@@ -1,15 +1,15 @@
 package flattener
 
 import (
-	"archive/zip"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	kzip "github.com/klauspost/compress/zip"
 
 	"ccmb/internal/config"
 )
@@ -28,7 +28,7 @@ func (pf *Flattener) handleZIP(ctx context.Context, zipPath string) error {
 		return fmt.Errorf("context error before processing ZIP %s: %w", zipPath, err)
 	}
 
-	r, err := zip.OpenReader(zipPath)
+	r, err := kzip.OpenReader(zipPath)
 	if err != nil {
 		return fmt.Errorf("failed to open zip file %s: %w", zipPath, err)
 	}
@@ -66,7 +66,7 @@ func (pf *Flattener) handleZIP(ctx context.Context, zipPath string) error {
 	return nil
 }
 
-func (pf *Flattener) extractZIPMember(ctx context.Context, f *zip.File, targetPath string) error {
+func (pf *Flattener) extractZIPMember(ctx context.Context, f *kzip.File, targetPath string) error {
 	if err := ctx.Err(); err != nil {
 		return fmt.Errorf("context error before extracting zip member %s: %w", f.Name, err)
 	}
@@ -83,8 +83,9 @@ func (pf *Flattener) extractZIPMember(ctx context.Context, f *zip.File, targetPa
 
 	pf.saveMutex.Lock()
 	targetPath = pf.resolveCollision(targetPath)
+	cleanedPath := filepath.Clean(targetPath)
 	out, err := os.OpenFile(
-		filepath.Clean(targetPath),
+		cleanedPath,
 		os.O_WRONLY|os.O_CREATE|os.O_TRUNC,
 		f.Mode(),
 	)
@@ -93,27 +94,35 @@ func (pf *Flattener) extractZIPMember(ctx context.Context, f *zip.File, targetPa
 	if err != nil {
 		return fmt.Errorf("failed to create target file %s: %w", targetPath, err)
 	}
+
+	shouldCleanup := true
 	defer func() {
 		if errClose := out.Close(); errClose != nil {
 			log.Printf("failed to safely close output file: %v", errClose)
 		}
+		if shouldCleanup {
+			if errRemove := os.Remove(cleanedPath); errRemove != nil {
+				log.Printf("failed to remove incomplete file %s: %v", cleanedPath, errRemove)
+			}
+		}
 	}()
 
-	_, err = io.CopyN(out, rc, pf.MaxZIPFileBytes+1)
-
-	if err == nil {
-		return &zipExtractionError{
-			MemberName: f.Name,
-			Message:    "size exceeds maximum allowed limit",
-		}
-	}
-
-	if !errors.Is(err, io.EOF) && !errors.Is(err, io.ErrUnexpectedEOF) {
+	limitedReader := io.LimitReader(rc, pf.MaxZIPFileBytes+1)
+	written, err := io.Copy(out, limitedReader)
+	if err != nil {
 		return &zipExtractionError{
 			MemberName: f.Name,
 			Message:    err.Error(),
 		}
 	}
 
+	if written > pf.MaxZIPFileBytes {
+		return &zipExtractionError{
+			MemberName: f.Name,
+			Message:    "size exceeds maximum allowed limit",
+		}
+	}
+
+	shouldCleanup = false
 	return nil
 }
