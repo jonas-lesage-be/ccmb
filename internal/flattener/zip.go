@@ -3,9 +3,7 @@ package flattener
 import (
 	"context"
 	"fmt"
-	"io"
 	"log"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -14,16 +12,7 @@ import (
 	"ccmb/internal/config"
 )
 
-type zipExtractionError struct {
-	MemberName string
-	Message    string
-}
-
-func (e *zipExtractionError) Error() string {
-	return fmt.Sprintf("error extracting zip member %s: %s", e.MemberName, e.Message)
-}
-
-func (pf *Flattener) handleZIP(ctx context.Context, zipPath string) error {
+func (f *Flattener) handleZIP(ctx context.Context, zipPath string) error {
 	if err := ctx.Err(); err != nil {
 		return fmt.Errorf("context error before processing ZIP %s: %w", zipPath, err)
 	}
@@ -38,42 +27,42 @@ func (pf *Flattener) handleZIP(ctx context.Context, zipPath string) error {
 		}
 	}()
 
-	relZIP, err := filepath.Rel(pf.SourceDir, zipPath)
+	relZIP, err := filepath.Rel(f.SourceDir, zipPath)
 	if err != nil {
 		return fmt.Errorf("failed to get relative zip path: %w", err)
 	}
-	zipPrefix := config.EncodeFlatName(relZIP, pf.FlatPathDelimiter, pf.EscapedDelimiter)
+	zipPrefix := config.EncodeFlatName(relZIP, f.FlatPathDelimiter, f.EscapedDelimiter)
 	zipPrefix = strings.TrimSuffix(zipPrefix, filepath.Ext(zipPrefix))
 
-	for _, f := range r.File {
+	for _, file := range r.File {
 		if err := ctx.Err(); err != nil {
 			return fmt.Errorf("context error while processing ZIP %s: %w", zipPath, err)
 		}
 
-		if f.FileInfo().IsDir() || config.ShouldIgnore(f.Name) {
+		if file.FileInfo().IsDir() || config.ShouldIgnore(file.Name) {
 			continue
 		}
 
-		memberFlatName := config.EncodeFlatName(f.Name, pf.FlatPathDelimiter, pf.EscapedDelimiter)
-		finalFlatName := fmt.Sprintf("%s--%s", zipPrefix, memberFlatName)
-		targetPath := filepath.Join(pf.TargetDir, finalFlatName)
+		memberFlatName := config.EncodeFlatName(file.Name, f.FlatPathDelimiter, f.EscapedDelimiter)
+		finalFlatName := fmt.Sprintf("%s%s%s", zipPrefix, f.FlatPathDelimiter, memberFlatName)
+		targetPath := filepath.Join(f.TargetDir, finalFlatName)
 
-		if err := pf.extractZIPMember(ctx, f, targetPath); err != nil {
-			log.Printf("Failed to extract %s from zip: %v", f.Name, err)
+		if err := f.extractZIPMember(ctx, file, targetPath); err != nil {
+			log.Printf("Failed to extract %s from zip: %v", file.Name, err)
 		}
 	}
 
 	return nil
 }
 
-func (pf *Flattener) extractZIPMember(ctx context.Context, f *kzip.File, targetPath string) error {
-	if err := ctx.Err(); err != nil {
-		return fmt.Errorf("context error before extracting zip member %s: %w", f.Name, err)
-	}
-
-	rc, err := f.Open()
+func (f *Flattener) extractZIPMember(
+	ctx context.Context,
+	file *kzip.File,
+	targetPath string,
+) error {
+	rc, err := file.Open()
 	if err != nil {
-		return fmt.Errorf("failed to open zip member %s: %w", f.Name, err)
+		return fmt.Errorf("failed to open zip member %s: %w", file.Name, err)
 	}
 	defer func() {
 		if errClose := rc.Close(); errClose != nil {
@@ -81,48 +70,9 @@ func (pf *Flattener) extractZIPMember(ctx context.Context, f *kzip.File, targetP
 		}
 	}()
 
-	pf.saveMutex.Lock()
-	targetPath = pf.resolveCollision(targetPath)
-	cleanedPath := filepath.Clean(targetPath)
-	out, err := os.OpenFile(
-		cleanedPath,
-		os.O_WRONLY|os.O_CREATE|os.O_TRUNC,
-		f.Mode(),
-	)
-	pf.saveMutex.Unlock()
-
-	if err != nil {
-		return fmt.Errorf("failed to create target file %s: %w", targetPath, err)
+	if err := f.extractFileStream(ctx, rc, targetPath, file.Mode(), file.Name); err != nil {
+		return fmt.Errorf("failed to extract zip member %s: %w", file.Name, err)
 	}
 
-	shouldCleanup := true
-	defer func() {
-		if errClose := out.Close(); errClose != nil {
-			log.Printf("failed to safely close output file: %v", errClose)
-		}
-		if shouldCleanup {
-			if errRemove := os.Remove(cleanedPath); errRemove != nil {
-				log.Printf("failed to remove incomplete file %s: %v", cleanedPath, errRemove)
-			}
-		}
-	}()
-
-	limitedReader := io.LimitReader(rc, pf.MaxZIPFileBytes+1)
-	written, err := io.Copy(out, limitedReader)
-	if err != nil {
-		return &zipExtractionError{
-			MemberName: f.Name,
-			Message:    err.Error(),
-		}
-	}
-
-	if written > pf.MaxZIPFileBytes {
-		return &zipExtractionError{
-			MemberName: f.Name,
-			Message:    "size exceeds maximum allowed limit",
-		}
-	}
-
-	shouldCleanup = false
 	return nil
 }

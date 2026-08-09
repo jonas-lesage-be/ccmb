@@ -47,25 +47,25 @@ func NewFlattener(cfg *config.Config) *Flattener {
 }
 
 // Execute scans the source directory and flattens files into the target directory.
-func (pf *Flattener) Execute(ctx context.Context) error {
+func (f *Flattener) Execute(ctx context.Context) error {
 	log.Println("--- Starting directory flattening ---")
 
-	if err := os.MkdirAll(pf.TargetDir, pf.TargetDirPermissions); err != nil {
+	if err := os.MkdirAll(f.TargetDir, f.TargetDirPermissions); err != nil {
 		return fmt.Errorf("failed to create target directory: %w", err)
 	}
 
-	absTarget, err := filepath.Abs(pf.TargetDir)
+	absTarget, err := filepath.Abs(f.TargetDir)
 	if err != nil {
 		return fmt.Errorf("failed to get absolute target path: %w", err)
 	}
 
-	filesToProcess, err := pf.collectFiles(ctx, absTarget)
+	filesToProcess, err := f.collectFiles(ctx, absTarget)
 	if err != nil {
 		return err
 	}
 
 	g, ctx := errgroup.WithContext(ctx)
-	g.SetLimit(pf.MaxFlattenerWorkerCount)
+	g.SetLimit(f.MaxFlattenerWorkerCount)
 
 	for _, path := range filesToProcess {
 		if err := ctx.Err(); err != nil {
@@ -73,7 +73,7 @@ func (pf *Flattener) Execute(ctx context.Context) error {
 		}
 
 		g.Go(func() error {
-			return pf.processFile(ctx, path)
+			return f.processFile(ctx, path)
 		})
 	}
 
@@ -84,10 +84,10 @@ func (pf *Flattener) Execute(ctx context.Context) error {
 	return nil
 }
 
-func (pf *Flattener) collectFiles(ctx context.Context, absTarget string) ([]string, error) {
-	filesToProcess := make([]string, 0, pf.EstFileCount)
+func (f *Flattener) collectFiles(ctx context.Context, absTarget string) ([]string, error) {
+	filesToProcess := make([]string, 0, f.EstFileCount)
 
-	err := filepath.WalkDir(pf.SourceDir, func(srcPath string, d fs.DirEntry, err error) error {
+	err := filepath.WalkDir(f.SourceDir, func(srcPath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return fmt.Errorf("error accessing path %s: %w", srcPath, err)
 		}
@@ -118,45 +118,54 @@ func (pf *Flattener) collectFiles(ctx context.Context, absTarget string) ([]stri
 	return filesToProcess, nil
 }
 
-func (pf *Flattener) processFile(ctx context.Context, path string) error {
+func (f *Flattener) processFile(ctx context.Context, path string) error {
 	if err := ctx.Err(); err != nil {
 		return fmt.Errorf("context error while processing file %s: %w", path, err)
 	}
 
-	ext := strings.ToLower(filepath.Ext(path))
+	ext := f.extension(path)
 	if ext == ".zip" {
 		log.Printf("ZIP archive found, extracting: %s\n", filepath.Base(path))
-		if err := pf.handleZIP(ctx, path); err != nil {
-			return fmt.Errorf("Error processing ZIP %s: %w", path, err)
+		if err := f.handleZIP(ctx, path); err != nil {
+			return fmt.Errorf("error processing ZIP %s: %w", path, err)
 		}
 
 		return nil
 	}
 
-	rel, err := filepath.Rel(pf.SourceDir, path)
+	if ext == ".tar.gz" || ext == ".tgz" {
+		log.Printf("%s archive found, extracting: %s\n", strings.ToUpper(ext), filepath.Base(path))
+		if err := f.handleTarGZ(ctx, path); err != nil {
+			return fmt.Errorf("error processing %s %s: %w", strings.ToUpper(ext), path, err)
+		}
+
+		return nil
+	}
+
+	rel, err := filepath.Rel(f.SourceDir, path)
 	if err != nil {
 		return fmt.Errorf("failed to get relative path for %s: %w", path, err)
 	}
 
-	flatName := config.EncodeFlatName(rel, pf.FlatPathDelimiter, pf.EscapedDelimiter)
-	targetPath := filepath.Join(pf.TargetDir, flatName)
+	flatName := config.EncodeFlatName(rel, f.FlatPathDelimiter, f.EscapedDelimiter)
+	targetPath := filepath.Join(f.TargetDir, flatName)
 
-	if err := pf.copyFileSecure(ctx, path, targetPath); err != nil {
-		return fmt.Errorf("Error copying %s: %w", path, err)
+	if err := f.copyFileSecure(ctx, path, targetPath); err != nil {
+		return fmt.Errorf("error copying %s: %w", path, err)
 	}
 
 	return nil
 }
 
-func (pf *Flattener) copyFileSecure(ctx context.Context, src, dst string) error {
+func (f *Flattener) copyFileSecure(ctx context.Context, src, dst string) error {
 	if err := ctx.Err(); err != nil {
 		return fmt.Errorf("context error before copying file %s: %w", src, err)
 	}
 
-	pf.saveMutex.Lock()
-	dst = pf.resolveCollision(dst)
+	f.saveMutex.Lock()
+	dst = f.resolveCollision(dst)
 	out, err := os.Create(filepath.Clean(dst))
-	pf.saveMutex.Unlock()
+	f.saveMutex.Unlock()
 
 	if err != nil {
 		return fmt.Errorf("failed to create file %s: %w", dst, err)
@@ -193,12 +202,12 @@ func (pf *Flattener) copyFileSecure(ctx context.Context, src, dst string) error 
 	return nil
 }
 
-func (pf *Flattener) resolveCollision(path string) string {
+func (f *Flattener) resolveCollision(path string) string {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return path
 	}
 
-	ext := filepath.Ext(path)
+	ext := f.extension(path)
 	base := strings.TrimSuffix(path, ext)
 
 	for counter := 1; ; counter++ {

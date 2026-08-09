@@ -25,6 +25,7 @@ linters:
           allow:
             - $gostd
             - ccmb
+            - github.com/klauspost/compress/gzip
             - github.com/klauspost/compress/zip
             - github.com/pdfcpu/pdfcpu/pkg/api
             - github.com/pdfcpu/pdfcpu/pkg/pdfcpu
