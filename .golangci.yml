@@ -1,0 +1,117 @@
+version: "2"
+
+linters:
+  default: all
+
+  disable: # Rules that are often too strict or not applicable to this project.
+    - exhaustruct # Requires struct fields to be explicitly initialized.
+    - gomodguard # [Old version] Requires that all dependencies are explicitly listed in go.mod.
+    - nlreturn # Requires explicit return statements at the end of functions.
+    - noinlineerr # Requires that errors are not inlined in return statements.
+    - tagliatelle # Requires that struct tags are aligned and formatted consistently.
+    - varnamelen # Requires variable names to be at least 3 characters long.
+    - wsl # Requires whitespace around operators.
+    - wsl_v5 # Requires whitespace around operators.
+
+  settings:
+    funlen:
+      lines: 100
+      statements: 50
+      ignore-comments: true
+
+    depguard:
+      rules:
+        main:
+          allow:
+            - $gostd
+            - ccmb
+            - github.com/pdfcpu/pdfcpu/pkg/api
+            - github.com/pdfcpu/pdfcpu/pkg/pdfcpu
+            - github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types
+            - golang.org/x/sync/errgroup
+
+    ireturn:
+      allow:
+        - error
+        - generic
+
+    lll:
+      line-length: 100
+
+  exclusions:
+    rules:
+      # This message appears due to a conflict between the formatters.
+      - text: "File is not properly formatted"
+        linters:
+          - gofmt
+          - gofumpt
+          - goimports
+          - gci
+          - golines
+          - swaggo
+
+      # The linters funlen and gochecknoglobals are not applicable to test files.
+      - path: _test\.go$
+        linters:
+          - funlen
+          - gochecknoglobals
+          - goconst
+
+formatters:
+  enable:
+    # The gofmt formatter ensures that the code adheres to the standard Go formatting conventions.
+    - gofmt
+    # The gofumpt formatter enforces stricter formatting rules and additional formatting options.
+    - gofumpt
+    # The goimports formatter automatically adds missing imports and removes unused ones.
+    - goimports
+    # The gci formatter organizes import statements according to the specified sections and order.
+    - gci
+    # The golines formatter automatically wraps long lines of code to improve readability.
+    - golines
+    # The swaggo formatter generates Swagger documentation for the API endpoints based on the code annotations.
+    - swaggo
+
+  settings:
+    gofmt:
+      rewrite-rules:
+        # Type aliases
+        - pattern: "interface{}"
+          replacement: "any"
+
+        # Byte comparisons
+        - pattern: "bytes.Compare(a, b) == 0"
+          replacement: "bytes.Equal(a, b)"
+        - pattern: "bytes.Compare(a, b) != 0"
+          replacement: "!bytes.Equal(a, b)"
+
+        # String comparisons
+        - pattern: "strings.Compare(a, b) == 0"
+          replacement: "a == b"
+        - pattern: "strings.Compare(a, b) != 0"
+          replacement: "a != b"
+
+        # Time
+        - pattern: "time.Now().Sub(a)"
+          replacement: "time.Since(a)"
+
+        # IO
+        - pattern: "ioutil.ReadFile(a)"
+          replacement: "os.ReadFile(a)"
+        - pattern: "ioutil.WriteFile(a, b, c)"
+          replacement: "os.WriteFile(a, b, c)"
+        - pattern: "ioutil.ReadAll(a)"
+          replacement: "io.ReadAll(a)"
+
+        # Make
+        - pattern: "make(a, 0, 0)"
+          replacement: "make(a, 0)"
+
+    gofumpt:
+      extra-rules: true
+
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(ccmb)

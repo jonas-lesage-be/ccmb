@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "golang.go",
+    "shardulm94.trailing-spaces",
+    "sonarsource.sonarlint-vscode",
+    "usernamehw.errorlens",
+    "wayou.vscode-todo-highlight",
+    "EditorConfig.EditorConfig",
+    "Gruntfuggly.todo-tree"
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit"
+  },
+
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.tabSize": 2,
+
+  "go.alternateTools": {
+    "customFormatter": "golangci-lint"
+  },
+  "go.formatFlags": ["fmt", "--stdin"],
+  "go.formatTool": "custom",
+
+  "go.lintTool": "golangci-lint",
+  "go.useLanguageServer": true,
+
+  "[go]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit"
+    },
+
+    "editor.defaultFormatter": "golang.go",
+    "editor.tabSize": 4,
+    "editor.insertSpaces": false
+  },
+
+  "gopls": {
+    "formatting.gofumpt": false,
+    "ui.diagnostic.staticcheck": true
+  },
+
+  "yaml.schemas": {
+    "https://golangci-lint.run/jsonschema/golangci.jsonschema.json": "${workspaceFolder}/.golangci.yml"
+  }
+}
