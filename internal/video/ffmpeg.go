@@ -11,8 +11,8 @@ import (
 	"ccmb/internal/media"
 )
 
-func (e *Extractor) shouldProcess(ctx context.Context, fullPath string) bool {
-	isVideo, err := e.checkIsVideo(ctx, fullPath)
+func (e *Extractor) shouldProcess(ctx context.Context, path string) bool {
+	isVideo, err := e.checkIsVideo(ctx, path)
 	if err != nil {
 		return false
 	}
@@ -20,18 +20,18 @@ func (e *Extractor) shouldProcess(ctx context.Context, fullPath string) bool {
 	return isVideo
 }
 
-func (e *Extractor) checkIsVideo(ctx context.Context, fullPath string) (bool, error) {
+func (e *Extractor) checkIsVideo(ctx context.Context, path string) (bool, error) {
 	if e.VideoExtensions != nil {
-		if ext := strings.ToLower(filepath.Ext(fullPath)); !e.VideoExtensions[ext] {
+		if ext := strings.ToLower(filepath.Ext(path)); !e.VideoExtensions[ext] {
 			return false, nil
 		}
 		return true, nil
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, e.VideoExtractTimeout)
+	ctx, cancel := context.WithTimeout(ctx, e.Timeout)
 	defer cancel()
 
-	frameCount, err := media.FrameCount(ctx, fullPath)
+	frameCount, err := media.FrameCount(ctx, path)
 	if err != nil {
 		return false, fmt.Errorf("failed to check if file is a video: %w", err)
 	}
@@ -39,13 +39,13 @@ func (e *Extractor) checkIsVideo(ctx context.Context, fullPath string) (bool, er
 	return frameCount > 1, nil
 }
 
-func (e *Extractor) extractFrames(ctx context.Context, filePath string) error {
-	baseName := strings.TrimSuffix(filepath.Base(filePath), filepath.Ext(filePath))
+func (e *Extractor) extractFrames(ctx context.Context, path string) error {
+	baseName := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
 	outputPattern := filepath.Join(e.TargetDir, baseName+e.FlatPathDelimiter+"frame_%d.jpg")
 
-	slog.Info("Running FFmpeg to extract frames", "file", filepath.Base(filePath))
+	slog.Info("Running FFmpeg to extract frames", "file", filepath.Base(path))
 
-	ctx, cancel := context.WithTimeout(ctx, e.VideoExtractTimeout)
+	ctx, cancel := context.WithTimeout(ctx, e.Timeout)
 	defer cancel()
 
 	//nolint:gosec
@@ -58,7 +58,7 @@ func (e *Extractor) extractFrames(ctx context.Context, filePath string) error {
 		"-an",
 		"-sn",
 		// Input file.
-		"-i", filePath,
+		"-i", path,
 		// Extract 1 frame per second using variable frame rate mode.
 		"-vf", "fps=1",
 		"-fps_mode", "vfr",

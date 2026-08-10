@@ -75,14 +75,14 @@ func (f *Flattener) extractFileStream(
 		}
 	}()
 
-	limitedReader := io.LimitReader(src, f.MaxZIPFileBytes+1)
+	limitedReader := io.LimitReader(src, f.MaxArchiveFileBytes+1)
 	written, err := io.Copy(out, limitedReader)
 	if err != nil {
 		return fmt.Errorf("failed during copy: %w", err)
 	}
 
-	if written > f.MaxZIPFileBytes {
-		return fmt.Errorf("%w (%d bytes)", errSizeExceedsLimit, f.MaxZIPFileBytes)
+	if written > f.MaxArchiveFileBytes {
+		return fmt.Errorf("%w (%d bytes)", errSizeExceedsLimit, f.MaxArchiveFileBytes)
 	}
 
 	shouldCleanup = false

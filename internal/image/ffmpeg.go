@@ -11,18 +11,18 @@ import (
 	"ccmb/internal/media"
 )
 
-func (c *Converter) checkIsImage(ctx context.Context, fullPath string) (bool, error) {
+func (c *Converter) checkIsImage(ctx context.Context, path string) (bool, error) {
 	if c.ImageExtensions != nil {
-		if ext := strings.ToLower(filepath.Ext(fullPath)); !c.ImageExtensions[ext] {
+		if ext := strings.ToLower(filepath.Ext(path)); !c.ImageExtensions[ext] {
 			return false, nil
 		}
 		return true, nil
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, c.ImageConversionTimeout)
+	ctx, cancel := context.WithTimeout(ctx, c.Timeout)
 	defer cancel()
 
-	frameCount, err := media.FrameCount(ctx, fullPath)
+	frameCount, err := media.FrameCount(ctx, path)
 	if err != nil {
 		return false, fmt.Errorf("failed to check if file is an image: %w", err)
 	}
@@ -30,13 +30,13 @@ func (c *Converter) checkIsImage(ctx context.Context, fullPath string) (bool, er
 	return frameCount == 1, nil
 }
 
-func (c *Converter) convert(ctx context.Context, fileName, fullPath string) error {
-	baseName := strings.TrimSuffix(fileName, filepath.Ext(fileName))
+func (c *Converter) convert(ctx context.Context, name, path string) error {
+	baseName := strings.TrimSuffix(name, filepath.Ext(name))
 	outputPath := filepath.Join(c.TargetDir, baseName+".png")
 
-	slog.Info("Converting unsupported image to PNG", "file", fileName)
+	slog.Info("Converting unsupported image to PNG", "file", name)
 
-	ctx, cancel := context.WithTimeout(ctx, c.ImageConversionTimeout)
+	ctx, cancel := context.WithTimeout(ctx, c.Timeout)
 	defer cancel()
 
 	//nolint:gosec
@@ -46,7 +46,7 @@ func (c *Converter) convert(ctx context.Context, fileName, fullPath string) erro
 		// Use hardware acceleration if available.
 		"-hwaccel", "auto",
 		// Input file.
-		"-i", fullPath,
+		"-i", path,
 		// Use high quality.
 		"-q:v", "2",
 		// Use all available threads.

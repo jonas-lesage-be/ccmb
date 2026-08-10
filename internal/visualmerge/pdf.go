@@ -17,8 +17,8 @@ import (
 	"ccmb/internal/config"
 )
 
-func (m *Merger) preparePDFComponent(ctx context.Context, fullPath string) (string, int64, error) {
-	convertedPDF, err := m.convertToHeaderedPDF(ctx, fullPath, m.TargetDir)
+func (m *Merger) preparePDFComponent(ctx context.Context, path string) (string, int64, error) {
+	convertedPDF, err := m.convertToHeaderedPDF(ctx, path, m.TargetDir)
 	if err != nil {
 		return "", 0, err
 	}

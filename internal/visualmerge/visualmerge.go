@@ -14,25 +14,27 @@ import (
 
 // Merger is responsible for merging images and PDFs into size-constrained PDF files.
 type Merger struct {
+	TargetDir       string
+	MaxPDFFileBytes int64
+
 	FlatPathDelimiter string
 	EscapedDelimiter  string
 	DecodePlaceholder string
 
 	VisualExtensions map[string]bool
-	MaxPDFFileBytes  int64
-	TargetDir        string
 }
 
 // NewMerger creates a new instance of Merger using the application configuration.
 func NewMerger(cfg *config.Config) *Merger {
 	return &Merger{
+		TargetDir:       cfg.TargetDir,
+		MaxPDFFileBytes: cfg.MaxPDFFileBytes,
+
 		FlatPathDelimiter: cfg.FlatPathDelimiter,
 		EscapedDelimiter:  cfg.EscapedDelimiter,
 		DecodePlaceholder: cfg.DecodePlaceholder,
 
 		VisualExtensions: cfg.VisualExtensions,
-		MaxPDFFileBytes:  cfg.MaxPDFFileBytes,
-		TargetDir:        cfg.TargetDir,
 	}
 }
 
@@ -71,19 +73,19 @@ func (m *Merger) filterVisualFiles(files []os.DirEntry) []string {
 	return visualFiles
 }
 
-func (m *Merger) processVisualFiles(ctx context.Context, visualFiles []string) error {
+func (m *Merger) processVisualFiles(ctx context.Context, files []string) error {
 	var currentBatch []string
 	var currentSizeBytes int64
 	partCounter := 1
 
-	for _, fullPath := range visualFiles {
+	for _, path := range files {
 		if err := ctx.Err(); err != nil {
-			return fmt.Errorf("context error while processing file %s: %w", fullPath, err)
+			return fmt.Errorf("context error while processing file %s: %w", path, err)
 		}
 
-		convertedPDF, size, err := m.preparePDFComponent(ctx, fullPath)
+		convertedPDF, size, err := m.preparePDFComponent(ctx, path)
 		if err != nil {
-			slog.Warn("Skipping asset", "file", filepath.Base(fullPath), "error", err)
+			slog.Warn("Skipping asset", "file", filepath.Base(path), "error", err)
 			continue
 		}
 

@@ -16,13 +16,14 @@ import (
 
 // Merger is responsible for merging text files into size-constrained text files.
 type Merger struct {
+	TargetDir           string
+	TextFilePermissions os.FileMode
+
+	MaxTextFileBytes int64
+
 	FlatPathDelimiter string
 	EscapedDelimiter  string
 	DecodePlaceholder string
-
-	MaxTextFileBytes    int64
-	TargetDir           string
-	TextFilePermissions os.FileMode
 }
 
 // ErrOutsideTargetDir is returned when a file is found outside the target directory.
@@ -31,13 +32,14 @@ var ErrOutsideTargetDir = errors.New("file is outside target directory")
 // NewMerger creates a new instance of Merger using the application configuration.
 func NewMerger(cfg *config.Config) *Merger {
 	return &Merger{
+		TargetDir:           cfg.TargetDir,
+		TextFilePermissions: cfg.TextFilePermissions,
+
+		MaxTextFileBytes: cfg.MaxTextFileBytes,
+
 		FlatPathDelimiter: cfg.FlatPathDelimiter,
 		EscapedDelimiter:  cfg.EscapedDelimiter,
 		DecodePlaceholder: cfg.DecodePlaceholder,
-
-		MaxTextFileBytes:    cfg.MaxTextFileBytes,
-		TargetDir:           cfg.TargetDir,
-		TextFilePermissions: cfg.TextFilePermissions,
 	}
 }
 
@@ -85,10 +87,10 @@ func (m *Merger) processFiles(ctx context.Context, files []os.DirEntry) ([]strin
 			continue
 		}
 
-		fullPath := filepath.Join(m.TargetDir, file.Name())
-		textBatch = append(textBatch, fullPath)
+		path := filepath.Join(m.TargetDir, file.Name())
+		textBatch = append(textBatch, path)
 
-		fileBlock, err := m.buildFileBlock(file.Name(), fullPath)
+		fileBlock, err := m.buildFileBlock(file.Name(), path)
 		if err != nil {
 			errs = append(errs, err)
 			continue
@@ -114,20 +116,20 @@ func (m *Merger) shouldSkip(file os.DirEntry) bool {
 	return file.IsDir() || strings.HasPrefix(file.Name(), "FinalResult_")
 }
 
-func (m *Merger) buildFileBlock(fileName, fullPath string) (string, error) {
-	cleanPath := filepath.Clean(fullPath)
+func (m *Merger) buildFileBlock(name, path string) (string, error) {
+	cleanPath := filepath.Clean(path)
 
 	if !pathsafe.Contains(m.TargetDir, cleanPath) {
-		return "", fmt.Errorf("failed to process %s: %w", fileName, ErrOutsideTargetDir)
+		return "", fmt.Errorf("failed to process %s: %w", name, ErrOutsideTargetDir)
 	}
 
 	content, err := os.ReadFile(cleanPath)
 	if err != nil {
-		return "", fmt.Errorf("failed to read file %s: %w", fileName, err)
+		return "", fmt.Errorf("failed to read file %s: %w", name, err)
 	}
 
 	originalPath := config.DecodeFlatName(
-		fileName,
+		name,
 		m.EscapedDelimiter,
 		m.DecodePlaceholder,
 		m.FlatPathDelimiter,

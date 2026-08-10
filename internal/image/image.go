@@ -16,26 +16,30 @@ import (
 
 // Converter is responsible for converting image files.
 type Converter struct {
-	MaxImageWorkerCount      int
-	ImageConversionTimeout   time.Duration
+	TargetDir string
+
+	MaxWorkers int
+	Timeout    time.Duration
+
 	ImageExtensions          map[string]bool
 	SupportedImageExtensions map[string]bool
-	TargetDir                string
 }
 
 type job struct {
-	fileName string
-	fullPath string
+	name string
+	path string
 }
 
 // NewConverter creates a new instance of Converter using the application configuration.
 func NewConverter(cfg *config.Config) *Converter {
 	return &Converter{
-		MaxImageWorkerCount:      cfg.MaxImageWorkerCount,
-		ImageConversionTimeout:   cfg.ImageConversionTimeout,
+		TargetDir: cfg.TargetDir,
+
+		MaxWorkers: cfg.MaxImageWorkers,
+		Timeout:    cfg.ImageConversionTimeout,
+
 		ImageExtensions:          cfg.ImageExtensions,
 		SupportedImageExtensions: cfg.SupportedImageExtensions,
-		TargetDir:                cfg.TargetDir,
 	}
 }
 
@@ -53,12 +57,12 @@ func (c *Converter) Execute(ctx context.Context) error {
 	}
 
 	g, ctx := errgroup.WithContext(ctx)
-	g.SetLimit(c.MaxImageWorkerCount)
+	g.SetLimit(c.MaxWorkers)
 
 	for _, j := range jobs {
 		g.Go(func() error {
-			if err := c.processFile(ctx, j.fileName, j.fullPath); err != nil {
-				return fmt.Errorf("error converting %s: %w", j.fileName, err)
+			if err := c.processFile(ctx, j.name, j.path); err != nil {
+				return fmt.Errorf("error converting %s: %w", j.name, err)
 			}
 			return nil
 		})
@@ -79,23 +83,23 @@ func (c *Converter) jobsToProcess(ctx context.Context, files []os.DirEntry) []jo
 			continue
 		}
 
-		fullPath := filepath.Join(c.TargetDir, file.Name())
+		path := filepath.Join(c.TargetDir, file.Name())
 		ext := strings.ToLower(filepath.Ext(file.Name()))
 
 		if c.SupportedImageExtensions[ext] {
 			continue
 		}
 
-		if c.shouldProcess(ctx, fullPath) {
-			jobs = append(jobs, job{fileName: file.Name(), fullPath: fullPath})
+		if c.shouldProcess(ctx, path) {
+			jobs = append(jobs, job{name: file.Name(), path: path})
 		}
 	}
 
 	return jobs
 }
 
-func (c *Converter) shouldProcess(ctx context.Context, fullPath string) bool {
-	isImage, err := c.checkIsImage(ctx, fullPath)
+func (c *Converter) shouldProcess(ctx context.Context, path string) bool {
+	isImage, err := c.checkIsImage(ctx, path)
 	if err != nil {
 		return false
 	}
@@ -103,12 +107,12 @@ func (c *Converter) shouldProcess(ctx context.Context, fullPath string) bool {
 	return isImage
 }
 
-func (c *Converter) processFile(ctx context.Context, fileName, fullPath string) error {
-	if err := c.convert(ctx, fileName, fullPath); err != nil {
+func (c *Converter) processFile(ctx context.Context, fileName, path string) error {
+	if err := c.convert(ctx, fileName, path); err != nil {
 		return fmt.Errorf("failed to convert image: %w", err)
 	}
 
-	if err := os.Remove(fullPath); err != nil {
+	if err := os.Remove(path); err != nil {
 		return fmt.Errorf("failed to delete original image file: %w", err)
 	}
 

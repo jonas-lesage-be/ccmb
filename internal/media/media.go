@@ -9,7 +9,7 @@ import (
 )
 
 // FrameCount returns the number of frames in a file using ffprobe.
-func FrameCount(ctx context.Context, fullPath string) (int, error) {
+func FrameCount(ctx context.Context, path string) (int, error) {
 	//nolint:gosec
 	cmd := exec.CommandContext(
 		ctx,
@@ -26,7 +26,7 @@ func FrameCount(ctx context.Context, fullPath string) (int, error) {
 		"-count_frames",
 		// Strip the keys from the output.
 		"-of", "default=noprint_wrappers=1:nokey=1",
-		fullPath,
+		path,
 	)
 
 	output, err := cmd.Output()

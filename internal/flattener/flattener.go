@@ -20,29 +20,35 @@ import (
 type Flattener struct {
 	saveMutex sync.Mutex
 
-	MaxFlattenerWorkerCount int
-	EstFileCount            int
-	FlatPathDelimiter       string
-	EscapedDelimiter        string
-
-	MaxZIPFileBytes      int64
 	SourceDir            string
 	TargetDir            string
 	TargetDirPermissions os.FileMode
+
+	MaxFlattenerWorkers int
+	EstFileCount        int
+
+	FlatPathDelimiter string
+	EscapedDelimiter  string
+
+	MaxArchiveFileBytes int64
+	FilterExtensions    map[string]bool
 }
 
 // NewFlattener creates a new instance of Flattener using the application configuration.
 func NewFlattener(cfg *config.Config) *Flattener {
 	return &Flattener{
-		MaxFlattenerWorkerCount: cfg.MaxFlattenerWorkerCount,
-		EstFileCount:            cfg.EstFileCount,
-		FlatPathDelimiter:       cfg.FlatPathDelimiter,
-		EscapedDelimiter:        cfg.EscapedDelimiter,
-
-		MaxZIPFileBytes:      cfg.MaxZIPFileBytes,
 		SourceDir:            cfg.SourceDir,
 		TargetDir:            cfg.TargetDir,
 		TargetDirPermissions: cfg.TargetDirPermissions,
+
+		MaxFlattenerWorkers: cfg.MaxFlattenerWorkers,
+		EstFileCount:        cfg.EstFileCount,
+
+		FlatPathDelimiter: cfg.FlatPathDelimiter,
+		EscapedDelimiter:  cfg.EscapedDelimiter,
+
+		MaxArchiveFileBytes: cfg.MaxArchiveFileBytes,
+		FilterExtensions:    cfg.FilterExtensions,
 	}
 }
 
@@ -65,7 +71,7 @@ func (f *Flattener) Execute(ctx context.Context) error {
 	}
 
 	g, ctx := errgroup.WithContext(ctx)
-	g.SetLimit(f.MaxFlattenerWorkerCount)
+	g.SetLimit(f.MaxFlattenerWorkers)
 
 	for _, path := range filesToProcess {
 		if err := ctx.Err(); err != nil {

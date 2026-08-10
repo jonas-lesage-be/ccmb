@@ -16,26 +16,30 @@ import (
 
 // Extractor is responsible for extracting frames from video files.
 type Extractor struct {
-	MaxVideoWorkerCount int
-	FlatPathDelimiter   string
-	VideoExtractTimeout time.Duration
-	VideoExtensions     map[string]bool
-	TargetDir           string
+	TargetDir string
+
+	MaxWorkers int
+	Timeout    time.Duration
+
+	FlatPathDelimiter string
+	VideoExtensions   map[string]bool
 }
 
 type job struct {
-	fileName string
-	fullPath string
+	name string
+	path string
 }
 
 // NewExtractor creates a new instance of Extractor using the application configuration.
 func NewExtractor(cfg *config.Config) *Extractor {
 	return &Extractor{
-		MaxVideoWorkerCount: cfg.MaxVideoWorkerCount,
-		FlatPathDelimiter:   cfg.FlatPathDelimiter,
-		VideoExtractTimeout: cfg.VideoExtractTimeout,
-		VideoExtensions:     cfg.VideoExtensions,
-		TargetDir:           cfg.TargetDir,
+		TargetDir: cfg.TargetDir,
+
+		MaxWorkers: cfg.MaxVideoWorkers,
+		Timeout:    cfg.VideoExtractTimeout,
+
+		FlatPathDelimiter: cfg.FlatPathDelimiter,
+		VideoExtensions:   cfg.VideoExtensions,
 	}
 }
 
@@ -53,12 +57,12 @@ func (e *Extractor) Execute(ctx context.Context) error {
 	}
 
 	g, ctx := errgroup.WithContext(ctx)
-	g.SetLimit(e.MaxVideoWorkerCount)
+	g.SetLimit(e.MaxWorkers)
 
 	for _, j := range jobs {
 		g.Go(func() error {
-			if err := e.processFile(ctx, j.fileName, j.fullPath); err != nil {
-				return fmt.Errorf("error processing %s: %w", j.fileName, err)
+			if err := e.processFile(ctx, j.name, j.path); err != nil {
+				return fmt.Errorf("error processing %s: %w", j.name, err)
 			}
 			return nil
 		})
@@ -80,32 +84,32 @@ func (e *Extractor) jobsToProcess(ctx context.Context, files []os.DirEntry) []jo
 		}
 
 		var shouldProcess bool
-		var fullPath string
+		var path string
 
 		if e.VideoExtensions != nil {
 			ext := strings.ToLower(filepath.Ext(file.Name()))
 			if shouldProcess = e.VideoExtensions[ext]; shouldProcess {
-				fullPath = filepath.Join(e.TargetDir, file.Name())
+				path = filepath.Join(e.TargetDir, file.Name())
 			}
 		} else {
-			fullPath = filepath.Join(e.TargetDir, file.Name())
-			shouldProcess = e.shouldProcess(ctx, fullPath)
+			path = filepath.Join(e.TargetDir, file.Name())
+			shouldProcess = e.shouldProcess(ctx, path)
 		}
 
 		if shouldProcess {
-			jobs = append(jobs, job{fileName: file.Name(), fullPath: fullPath})
+			jobs = append(jobs, job{name: file.Name(), path: path})
 		}
 	}
 
 	return jobs
 }
 
-func (e *Extractor) processFile(ctx context.Context, fileName, fullPath string) error {
-	if err := e.extractFrames(ctx, fullPath); err != nil {
+func (e *Extractor) processFile(ctx context.Context, fileName, path string) error {
+	if err := e.extractFrames(ctx, path); err != nil {
 		return fmt.Errorf("failed to extract frames: %w", err)
 	}
 
-	if err := os.Remove(fullPath); err != nil {
+	if err := os.Remove(path); err != nil {
 		return fmt.Errorf("failed to delete video file %s: %w", fileName, err)
 	}
 
