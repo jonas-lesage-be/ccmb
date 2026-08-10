@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -27,7 +27,7 @@ func (m *Merger) preparePDFComponent(ctx context.Context, fullPath string) (stri
 	if err != nil {
 		if !errors.Is(err, os.ErrNotExist) {
 			if rmErr := os.Remove(convertedPDF); rmErr != nil {
-				log.Printf("Failed to delete %s: %v", convertedPDF, rmErr)
+				slog.Error("Failed to delete file", "path", convertedPDF, "error", rmErr)
 			}
 		}
 		return "", 0, fmt.Errorf("failed to check PDF status: %w", err)
@@ -122,7 +122,7 @@ func importImageWithWatermark(srcPath, outPDF, flatName string, wm *pdfcpu_model
 func mergeBatch(files []string, targetDir string, counter int) error {
 	fileName := fmt.Sprintf("FinalResult_Visual_Part_%d.pdf", counter)
 	filePath := filepath.Join(targetDir, fileName)
-	log.Printf("Flushing and writing structured batch out to file payload: %s", fileName)
+	slog.Info("Flushing and writing structured batch out to file payload", "file", fileName)
 
 	err := pdfcpu_api.MergeCreateFile(files, filePath, false, nil)
 	if err != nil {

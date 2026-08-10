@@ -2,7 +2,7 @@ package filter
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -26,7 +26,7 @@ func NewFilter(cfg *config.Config) *Filter {
 
 // Execute looks up all files in TargetDir and deletes unsupported files.
 func (f *Filter) Execute() error {
-	log.Println("--- Removing files with an unsupported extension ---")
+	slog.Info("Removing files with an unsupported extension")
 
 	files, err := os.ReadDir(f.TargetDir)
 	if err != nil {
@@ -41,9 +41,9 @@ func (f *Filter) Execute() error {
 		if ext := strings.ToLower(filepath.Ext(file.Name())); f.FilterExtensions[ext] {
 			fullPath := filepath.Join(f.TargetDir, file.Name())
 			if err := os.Remove(fullPath); err != nil {
-				log.Printf("Failed to delete %s: %v", file.Name(), err)
+				slog.Error("Failed to delete file", "filename", file.Name(), "error", err)
 			} else {
-				log.Printf("Deleted unsupported file: %s", file.Name())
+				slog.Error("Deleted unsupported file", "filename", file.Name())
 			}
 		}
 	}

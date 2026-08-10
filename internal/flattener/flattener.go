@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -48,7 +48,7 @@ func NewFlattener(cfg *config.Config) *Flattener {
 
 // Execute scans the source directory and flattens files into the target directory.
 func (f *Flattener) Execute(ctx context.Context) error {
-	log.Println("--- Starting directory flattening ---")
+	slog.Info("Starting directory flattening")
 
 	if err := os.MkdirAll(f.TargetDir, f.TargetDirPermissions); err != nil {
 		return fmt.Errorf("failed to create target directory: %w", err)
@@ -128,7 +128,7 @@ func (f *Flattener) processFile(ctx context.Context, path string) error {
 	handler := f.handlerForExtension(ext)
 
 	if handler != nil {
-		log.Printf("%s archive found, extracting: %s", displayExt, filepath.Base(path))
+		slog.Info("archive found, extracting", "type", displayExt, "file", filepath.Base(path))
 		if err := handler(ctx, path); err != nil {
 			return fmt.Errorf("error processing %s %s: %w", displayExt, path, err)
 		}
@@ -167,12 +167,12 @@ func (f *Flattener) copyFileSecure(ctx context.Context, src, dst string) error {
 	shouldCleanup := true
 	defer func() {
 		if errClose := out.Close(); errClose != nil {
-			log.Printf("failed to close written file: %v", errClose)
+			slog.Error("failed to close written file", "error", errClose)
 		}
 
 		if shouldCleanup {
 			if errRemove := os.Remove(dst); errRemove != nil {
-				log.Printf("failed to remove incomplete file %s: %v", dst, errRemove)
+				slog.Error("failed to remove incomplete file", "path", dst, "error", errRemove)
 			}
 		}
 	}()
@@ -183,7 +183,7 @@ func (f *Flattener) copyFileSecure(ctx context.Context, src, dst string) error {
 	}
 	defer func() {
 		if errClose := in.Close(); errClose != nil {
-			log.Printf("failed to close source stream: %v", errClose)
+			slog.Error("failed to close source stream", "error", errClose)
 		}
 	}()
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -38,7 +38,7 @@ func NewMerger(cfg *config.Config) *Merger {
 
 // Execute merges images and PDFs into size-constrained PDF files.
 func (m *Merger) Execute(ctx context.Context) error {
-	log.Println("--- Converting and merging visual data ---")
+	slog.Info("Converting and merging visual data")
 	files, err := os.ReadDir(m.TargetDir)
 	if err != nil {
 		return fmt.Errorf("failed to read target directory %s: %w", m.TargetDir, err)
@@ -83,7 +83,7 @@ func (m *Merger) processVisualFiles(ctx context.Context, visualFiles []string) e
 
 		convertedPDF, size, err := m.preparePDFComponent(ctx, fullPath)
 		if err != nil {
-			log.Printf("Skip asset %s: %v", filepath.Base(fullPath), err)
+			slog.Warn("Skipping asset", "file", filepath.Base(fullPath), "error", err)
 			continue
 		}
 

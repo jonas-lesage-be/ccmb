@@ -3,7 +3,7 @@ package image
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -41,7 +41,7 @@ func NewConverter(cfg *config.Config) *Converter {
 
 // Execute converts unsupported image files to supported formats.
 func (c *Converter) Execute(ctx context.Context) error {
-	log.Println("--- Converting unsupported image files ---")
+	slog.Info("Converting unsupported image files")
 	files, err := os.ReadDir(c.TargetDir)
 	if err != nil {
 		return fmt.Errorf("failed to read target directory: %w", err)

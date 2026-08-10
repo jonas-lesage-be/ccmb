@@ -3,7 +3,7 @@ package video
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -41,7 +41,7 @@ func NewExtractor(cfg *config.Config) *Extractor {
 
 // Execute extracts 1 frame per second calls.
 func (e *Extractor) Execute(ctx context.Context) error {
-	log.Println("--- Extracting frames out of videos ---")
+	slog.Info("Extracting frames out of videos")
 	files, err := os.ReadDir(e.TargetDir)
 	if err != nil {
 		return fmt.Errorf("failed to read target directory: %w", err)

@@ -5,7 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -58,7 +58,7 @@ func (f *Flattener) handleTAR(ctx context.Context, path string, wrapReader wrapR
 	}
 	defer func() {
 		if errClose := fi.Close(); errClose != nil {
-			log.Printf("failed to close %s file stream: %v", ext, errClose)
+			slog.Error("failed to close file stream", "type", ext, "error", errClose)
 		}
 	}()
 
@@ -69,7 +69,7 @@ func (f *Flattener) handleTAR(ctx context.Context, path string, wrapReader wrapR
 	if closer != nil {
 		defer func() {
 			if errClose := closer.Close(); errClose != nil {
-				log.Printf("failed to close %s reader: %v", ext, errClose)
+				slog.Error("failed to close reader", "type", ext, "error", errClose)
 			}
 		}()
 	}
@@ -102,7 +102,15 @@ func (f *Flattener) processTARStream(
 		}
 
 		if err := f.processTAREntry(ctx, tr, header, prefix, ext); err != nil {
-			log.Printf("Failed to extract %s from %s: %v", header.Name, filepath.Base(path), err)
+			slog.Error(
+				"failed to extract from archive",
+				"member",
+				header.Name,
+				"file",
+				filepath.Base(path),
+				"error",
+				err,
+			)
 		}
 	}
 

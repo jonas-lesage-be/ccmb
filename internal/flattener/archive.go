@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 )
@@ -60,11 +60,17 @@ func (f *Flattener) extractFileStream(
 	shouldCleanup := true
 	defer func() {
 		if errClose := out.Close(); errClose != nil {
-			log.Printf("failed to safely close output file: %v", errClose)
+			slog.Error("failed to safely close output file", "error", errClose)
 		}
 		if shouldCleanup {
 			if errRemove := os.Remove(cleanedPath); errRemove != nil {
-				log.Printf("failed to remove incomplete file %s: %v", cleanedPath, errRemove)
+				slog.Error(
+					"failed to remove incomplete file",
+					"path",
+					cleanedPath,
+					"error",
+					errRemove,
+				)
 			}
 		}
 	}()

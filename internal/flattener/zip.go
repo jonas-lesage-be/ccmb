@@ -3,7 +3,7 @@ package flattener
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"path/filepath"
 	"strings"
 
@@ -23,7 +23,7 @@ func (f *Flattener) handleZIP(ctx context.Context, zipPath string) error {
 	}
 	defer func() {
 		if errClose := r.Close(); errClose != nil {
-			log.Printf("failed to close zip reader: %v", errClose)
+			slog.Error("failed to close zip reader", "error", errClose)
 		}
 	}()
 
@@ -48,7 +48,7 @@ func (f *Flattener) handleZIP(ctx context.Context, zipPath string) error {
 		targetPath := filepath.Join(f.TargetDir, finalFlatName)
 
 		if err := f.extractZIPMember(ctx, file, targetPath); err != nil {
-			log.Printf("Failed to extract %s from zip: %v", file.Name, err)
+			slog.Error("failed to extract from zip", "member", file.Name, "error", err)
 		}
 	}
 
@@ -66,7 +66,7 @@ func (f *Flattener) extractZIPMember(
 	}
 	defer func() {
 		if errClose := rc.Close(); errClose != nil {
-			log.Printf("failed to close zip member stream: %v", errClose)
+			slog.Error("failed to close zip member stream", "error", errClose)
 		}
 	}()
 

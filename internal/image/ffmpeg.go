@@ -3,7 +3,7 @@ package image
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -34,7 +34,7 @@ func (c *Converter) convert(ctx context.Context, fileName, fullPath string) erro
 	baseName := strings.TrimSuffix(fileName, filepath.Ext(fileName))
 	outputPath := filepath.Join(c.TargetDir, baseName+".png")
 
-	log.Printf("Converting unsupported image to PNG: %s", fileName)
+	slog.Info("Converting unsupported image to PNG", "file", fileName)
 
 	ctx, cancel := context.WithTimeout(ctx, c.ImageConversionTimeout)
 	defer cancel()

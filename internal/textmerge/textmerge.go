@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -43,7 +43,7 @@ func NewMerger(cfg *config.Config) *Merger {
 
 // Execute merges all text files (.py, .js, .txt) into size-constrained text files.
 func (m *Merger) Execute(ctx context.Context) error {
-	log.Println("--- Merging all text files ---")
+	slog.Info("Merging all text files")
 
 	if err := ctx.Err(); err != nil {
 		return fmt.Errorf("context error before starting text merge: %w", err)
@@ -150,7 +150,7 @@ func (m *Merger) flush(b *strings.Builder, counter int, errs *[]error) {
 
 func (m *Merger) writeTextPart(data string, counter int) error {
 	outputName := filepath.Join(m.TargetDir, fmt.Sprintf("FinalResult_Text_Part_%d.txt", counter))
-	log.Printf("Saving merged structural textual payload to: %s", filepath.Base(outputName))
+	slog.Info("Saving merged structural textual payload", "file", filepath.Base(outputName))
 
 	if err := os.WriteFile(outputName, []byte(data), m.TextFilePermissions); err != nil {
 		return fmt.Errorf("failed to write text part %d: %w", counter, err)

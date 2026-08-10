@@ -3,7 +3,7 @@ package pathsafe
 import (
 	"errors"
 	"io/fs"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 )
@@ -28,7 +28,7 @@ func Contains(baseDir, targetPath string) bool {
 	}
 	defer func() {
 		if cErr := root.Close(); cErr != nil {
-			log.Printf("failed to close root directory: %v", cErr)
+			slog.Error("failed to close root directory", "error", cErr)
 		}
 	}()
 

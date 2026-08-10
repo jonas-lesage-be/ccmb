@@ -2,7 +2,7 @@ package pipeline
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"time"
 
 	"ccmb/internal/config"
@@ -47,7 +47,7 @@ func (p pipelineStep) String() string {
 // Execute runs the entire pipeline based on the provided configuration.
 func Execute(cfg *config.Config) {
 	ctx := context.Background()
-	log.Printf("Pipeline initialized. Source: %s | Target: %s\n\n", cfg.SourceDir, cfg.TargetDir)
+	slog.Info("Pipeline initialized", "source", cfg.SourceDir, "target", cfg.TargetDir)
 
 	// Execution step 1
 	runIf(cfg.RunFlattener, flattenerStep, func() error {
@@ -85,7 +85,7 @@ func Execute(cfg *config.Config) {
 		return merger.Execute(ctx)
 	})
 
-	log.Println("Pipeline execution successfully completed!")
+	slog.Info("Pipeline execution successfully completed")
 }
 
 func runIf(shouldRun bool, step pipelineStep, f func() error) {
@@ -93,19 +93,15 @@ func runIf(shouldRun bool, step pipelineStep, f func() error) {
 		return
 	}
 
-	log.Printf("=== Running STEP %d: %s ===", step+1, step)
+	logger := slog.With("step", int(step+1), "name", step.String())
+	logger.Info("Running step")
 
 	startTime := time.Now()
 	if err := f(); err != nil {
-		log.Fatalf("Pipeline aborted at step %d (%s): %v", step+1, step, err)
+		logger.Error("Pipeline aborted", "error", err)
 		return
 	}
 	duration := time.Since(startTime)
 
-	log.Printf(
-		"=== STEP %d: %s completed successfully (Time: %v) ===\n\n",
-		step+1,
-		step,
-		duration,
-	)
+	logger.Info("Step completed successfully", "duration", duration)
 }
