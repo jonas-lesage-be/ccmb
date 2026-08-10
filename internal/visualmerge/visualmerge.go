@@ -83,7 +83,7 @@ func (m *Merger) processVisualFiles(ctx context.Context, visualFiles []string) e
 
 		convertedPDF, size, err := m.preparePDFComponent(ctx, fullPath)
 		if err != nil {
-			log.Printf("Skip asset %s: %v\n", filepath.Base(fullPath), err)
+			log.Printf("Skip asset %s: %v", filepath.Base(fullPath), err)
 			continue
 		}
 

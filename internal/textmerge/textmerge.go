@@ -150,7 +150,7 @@ func (m *Merger) flush(b *strings.Builder, counter int, errs *[]error) {
 
 func (m *Merger) writeTextPart(data string, counter int) error {
 	outputName := filepath.Join(m.TargetDir, fmt.Sprintf("FinalResult_Text_Part_%d.txt", counter))
-	log.Printf("Saving merged structural textual payload to: %s\n", filepath.Base(outputName))
+	log.Printf("Saving merged structural textual payload to: %s", filepath.Base(outputName))
 
 	if err := os.WriteFile(outputName, []byte(data), m.TextFilePermissions); err != nil {
 		return fmt.Errorf("failed to write text part %d: %w", counter, err)

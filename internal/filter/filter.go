@@ -41,9 +41,9 @@ func (f *Filter) Execute() error {
 		if ext := strings.ToLower(filepath.Ext(file.Name())); f.FilterExtensions[ext] {
 			fullPath := filepath.Join(f.TargetDir, file.Name())
 			if err := os.Remove(fullPath); err != nil {
-				log.Printf("Failed to delete %s: %v\n", file.Name(), err)
+				log.Printf("Failed to delete %s: %v", file.Name(), err)
 			} else {
-				log.Printf("Deleted unsupported file: %s\n", file.Name())
+				log.Printf("Deleted unsupported file: %s", file.Name())
 			}
 		}
 	}

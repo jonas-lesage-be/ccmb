@@ -43,7 +43,7 @@ func (e *Extractor) extractFrames(ctx context.Context, filePath string) error {
 	baseName := strings.TrimSuffix(filepath.Base(filePath), filepath.Ext(filePath))
 	outputPattern := filepath.Join(e.TargetDir, baseName+e.FlatPathDelimiter+"frame_%d.jpg")
 
-	log.Printf("Running FFmpeg wrapper onto: %s\n", filepath.Base(filePath))
+	log.Printf("Running FFmpeg wrapper onto: %s", filepath.Base(filePath))
 
 	ctx, cancel := context.WithTimeout(ctx, e.VideoExtractTimeout)
 	defer cancel()
