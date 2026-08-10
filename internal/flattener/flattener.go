@@ -124,21 +124,14 @@ func (f *Flattener) processFile(ctx context.Context, path string) error {
 	}
 
 	ext := f.extension(path)
-	if ext == ".zip" {
-		log.Printf("ZIP archive found, extracting: %s", filepath.Base(path))
-		if err := f.handleZIP(ctx, path); err != nil {
-			return fmt.Errorf("error processing ZIP %s: %w", path, err)
+	displayExt := strings.TrimPrefix(strings.ToUpper(ext), ".")
+	handler := f.handlerForExtension(ext)
+
+	if handler != nil {
+		log.Printf("%s archive found, extracting: %s", displayExt, filepath.Base(path))
+		if err := handler(ctx, path); err != nil {
+			return fmt.Errorf("error processing %s %s: %w", displayExt, path, err)
 		}
-
-		return nil
-	}
-
-	if ext == ".tar.gz" || ext == ".tgz" {
-		log.Printf("%s archive found, extracting: %s", strings.ToUpper(ext), filepath.Base(path))
-		if err := f.handleTarGZ(ctx, path); err != nil {
-			return fmt.Errorf("error processing %s %s: %w", strings.ToUpper(ext), path, err)
-		}
-
 		return nil
 	}
 

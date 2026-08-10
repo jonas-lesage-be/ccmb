@@ -27,6 +27,7 @@ linters:
             - ccmb
             - github.com/klauspost/compress/gzip
             - github.com/klauspost/compress/zip
+            - github.com/klauspost/compress/zstd
             - github.com/pdfcpu/pdfcpu/pkg/api
             - github.com/pdfcpu/pdfcpu/pkg/pdfcpu
             - github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types

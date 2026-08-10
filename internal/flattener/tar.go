@@ -6,11 +6,21 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 
 	"ccmb/internal/config"
 )
+
+type (
+	wrapReaderFunc func(io.Reader) (io.Reader, io.Closer, error)
+	funcCloser     func() error
+)
+
+func (f funcCloser) Close() error {
+	return f()
+}
 
 func (f *Flattener) extension(path string) string {
 	lowerPath := strings.ToLower(path)
@@ -29,8 +39,41 @@ func (f *Flattener) extension(path string) string {
 	return filepath.Ext(lowerPath)
 }
 
-func (f *Flattener) handleTAR(ctx context.Context, r io.Reader, path string) error {
+func (f *Flattener) handlePlainTAR(ctx context.Context, path string) error {
+	return f.handleTAR(ctx, path, func(r io.Reader) (io.Reader, io.Closer, error) {
+		return r, nil, nil
+	})
+}
+
+func (f *Flattener) handleTAR(ctx context.Context, path string, wrapReader wrapReaderFunc) error {
 	ext := f.extension(path)
+
+	if err := ctx.Err(); err != nil {
+		return fmt.Errorf("context error before processing %s %s: %w", ext, path, err)
+	}
+
+	fi, err := os.Open(filepath.Clean(path))
+	if err != nil {
+		return fmt.Errorf("failed to open %s file %s: %w", ext, path, err)
+	}
+	defer func() {
+		if errClose := fi.Close(); errClose != nil {
+			log.Printf("failed to close %s file stream: %v", ext, errClose)
+		}
+	}()
+
+	decompressor, closer, err := wrapReader(fi)
+	if err != nil {
+		return err
+	}
+	if closer != nil {
+		defer func() {
+			if errClose := closer.Close(); errClose != nil {
+				log.Printf("failed to close %s reader: %v", ext, errClose)
+			}
+		}()
+	}
+
 	relPath, err := filepath.Rel(f.SourceDir, path)
 	if err != nil {
 		return fmt.Errorf("failed to get relative %s path: %w", ext, err)
@@ -38,6 +81,15 @@ func (f *Flattener) handleTAR(ctx context.Context, r io.Reader, path string) err
 
 	prefix := config.EncodeFlatName(relPath, f.FlatPathDelimiter, f.EscapedDelimiter)
 	prefix = strings.TrimSuffix(prefix, ext)
+
+	return f.processTARStream(ctx, decompressor, path, prefix, ext)
+}
+
+func (f *Flattener) processTARStream(
+	ctx context.Context,
+	r io.Reader,
+	path, prefix, ext string,
+) error {
 	tr := tar.NewReader(r)
 
 	for {

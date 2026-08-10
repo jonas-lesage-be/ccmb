@@ -12,6 +12,25 @@ import (
 
 var errSizeExceedsLimit = errors.New("size exceeds maximum allowed limit")
 
+func (f *Flattener) handlerForExtension(ext string) func(context.Context, string) error {
+	switch ext {
+	case ".zip":
+		return f.handleZIP
+	case ".tar.gz", ".tgz":
+		return f.handleTarGZ
+	// case ".tar.xz", ".txz":
+	// 	return f.handleTarXZ
+	case ".tar.zst", ".tzst":
+		return f.handleTarZST
+	case ".tar.bz2", ".tbz2":
+		return f.handleTarBZ2
+	case ".tar":
+		return f.handlePlainTAR
+	default:
+		return nil
+	}
+}
+
 func (f *Flattener) extractFileStream(
 	ctx context.Context,
 	src io.Reader,

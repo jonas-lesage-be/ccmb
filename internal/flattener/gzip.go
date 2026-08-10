@@ -3,37 +3,17 @@ package flattener
 import (
 	"context"
 	"fmt"
-	"log"
-	"os"
-	"path/filepath"
+	"io"
 
 	"github.com/klauspost/compress/gzip"
 )
 
-func (f *Flattener) handleTarGZ(ctx context.Context, tarGzPath string) error {
-	if err := ctx.Err(); err != nil {
-		return fmt.Errorf("context error before processing tar.gz %s: %w", tarGzPath, err)
-	}
-
-	fi, err := os.Open(filepath.Clean(tarGzPath))
-	if err != nil {
-		return fmt.Errorf("failed to open tar.gz file %s: %w", tarGzPath, err)
-	}
-	defer func() {
-		if errClose := fi.Close(); errClose != nil {
-			log.Printf("failed to close tar.gz file stream: %v", errClose)
+func (f *Flattener) handleTarGZ(ctx context.Context, path string) error {
+	return f.handleTAR(ctx, path, func(r io.Reader) (io.Reader, io.Closer, error) {
+		gzr, err := gzip.NewReader(r)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to create gzip reader for %s: %w", path, err)
 		}
-	}()
-
-	gzr, err := gzip.NewReader(fi)
-	if err != nil {
-		return fmt.Errorf("failed to initialize gzip reader for %s: %w", tarGzPath, err)
-	}
-	defer func() {
-		if errClose := gzr.Close(); errClose != nil {
-			log.Printf("failed to close gzip reader: %v", errClose)
-		}
-	}()
-
-	return f.handleTAR(ctx, gzr, tarGzPath)
+		return gzr, gzr, nil
+	})
 }
