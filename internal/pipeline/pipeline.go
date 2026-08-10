@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -44,64 +45,113 @@ func (p pipelineStep) String() string {
 	}
 }
 
-// Execute runs the entire pipeline based on the provided configuration.
-func Execute(cfg *config.Config) {
-	ctx := context.Background()
-	slog.Info("Pipeline initialized", "source", cfg.SourceDir, "target", cfg.TargetDir)
-
-	// Execution step 1
-	runIf(cfg.RunFlattener, flattenerStep, func() error {
-		f := flattener.NewFlattener(cfg)
-		return f.Execute(ctx)
-	})
-
-	// Execution step 2
-	runIf(cfg.RunFilter, filterStep, func() error {
-		f := filter.NewFilter(cfg)
-		return f.Execute()
-	})
-
-	// Execution step 3
-	runIf(cfg.RunImageConverter, imageConverterStep, func() error {
-		c := image.NewConverter(cfg)
-		return c.Execute(ctx)
-	})
-
-	// Execution step 4
-	runIf(cfg.RunVideoExtractor, videoExtractorStep, func() error {
-		e := video.NewExtractor(cfg)
-		return e.Execute(ctx)
-	})
-
-	// Execution step 5
-	runIf(cfg.RunVisualMerger, visualMergerStep, func() error {
-		merger := visualmerge.NewMerger(cfg)
-		return merger.Execute(ctx)
-	})
-
-	// Execution step 6
-	runIf(cfg.RunTextMerger, textMergerStep, func() error {
-		merger := textmerge.NewMerger(cfg)
-		return merger.Execute(ctx)
-	})
-
-	slog.Info("Pipeline execution successfully completed")
+func (p pipelineStep) ShouldSkip(cfg *config.Config) bool {
+	switch p {
+	case flattenerStep:
+		return cfg.SkipFlattener
+	case filterStep:
+		return cfg.SkipFilter
+	case imageConverterStep:
+		return cfg.SkipImageConverter
+	case videoExtractorStep:
+		return cfg.SkipVideoExtractor
+	case visualMergerStep:
+		return cfg.SkipVisualMerger
+	case textMergerStep:
+		return cfg.SkipTextMerger
+	default:
+		return true
+	}
 }
 
-func runIf(shouldRun bool, step pipelineStep, f func() error) {
-	if !shouldRun {
-		return
+func (p pipelineStep) Func(cfg *config.Config) func(context.Context) error {
+	switch p {
+	case flattenerStep:
+		return func(ctx context.Context) error {
+			f := flattener.NewFlattener(cfg)
+			return f.Execute(ctx)
+		}
+	case filterStep:
+		return func(_ context.Context) error {
+			f := filter.NewFilter(cfg)
+			return f.Execute()
+		}
+	case imageConverterStep:
+		return func(ctx context.Context) error {
+			c := image.NewConverter(cfg)
+			return c.Execute(ctx)
+		}
+	case videoExtractorStep:
+		return func(ctx context.Context) error {
+			e := video.NewExtractor(cfg)
+			return e.Execute(ctx)
+		}
+	case visualMergerStep:
+		return func(ctx context.Context) error {
+			m := visualmerge.NewMerger(cfg)
+			return m.Execute(ctx)
+		}
+	case textMergerStep:
+		return func(ctx context.Context) error {
+			m := textmerge.NewMerger(cfg)
+			return m.Execute(ctx)
+		}
+	default:
+		return nil
+	}
+}
+
+// Pipeline represents the sequential processing pipeline.
+type Pipeline struct {
+	cfg   *config.Config
+	steps []pipelineStep
+}
+
+// NewPipeline creates a new instance of Pipeline using the application configuration.
+func NewPipeline(cfg *config.Config) *Pipeline {
+	return &Pipeline{
+		cfg: cfg,
+		steps: []pipelineStep{
+			flattenerStep,
+			filterStep,
+			imageConverterStep,
+			videoExtractorStep,
+			visualMergerStep,
+			textMergerStep,
+		},
+	}
+}
+
+// Execute runs the entire pipeline based on the provided configuration.
+func (p *Pipeline) Execute(ctx context.Context) error {
+	slog.Info("Pipeline initialized", "source", p.cfg.SourceDir, "target", p.cfg.TargetDir)
+
+	for _, step := range p.steps {
+		if err := p.runIf(ctx, step); err != nil {
+			return fmt.Errorf("pipeline aborted at step %s: %w", step.String(), err)
+		}
+	}
+
+	slog.Info("Pipeline execution successfully completed")
+
+	return nil
+}
+
+func (p *Pipeline) runIf(ctx context.Context, step pipelineStep) error {
+	if step.ShouldSkip(p.cfg) {
+		return nil
 	}
 
 	logger := slog.With("step", int(step+1), "name", step.String())
 	logger.Info("Running step")
 
 	startTime := time.Now()
-	if err := f(); err != nil {
-		logger.Error("Pipeline aborted", "err", err)
-		return
+	if err := step.Func(p.cfg)(ctx); err != nil {
+		return fmt.Errorf("pipeline aborted: %w", err)
 	}
 	duration := time.Since(startTime)
 
 	logger.Info("Step completed successfully", "duration", duration)
+
+	return nil
 }

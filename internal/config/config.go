@@ -1,49 +1,62 @@
 package config
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"time"
+
+	"github.com/go-viper/mapstructure/v2"
+	"github.com/spf13/viper"
 
 	"ccmb/internal/conv"
 )
 
+var (
+	errInvalidExtensionSetType = errors.New("expected string for extension set")
+	errSourceDirRequired       = errors.New("source-dir is required")
+	errTargetDirRequired       = errors.New("target-dir is required")
+)
+
 // Config holds the configuration settings for the application.
 type Config struct {
-	SourceDir            string
-	TargetDir            string
-	TargetDirPermissions os.FileMode
-	TextFilePermissions  os.FileMode
+	SourceDir            string      `mapstructure:"source_dir"`
+	TargetDir            string      `mapstructure:"target_dir"`
+	TargetDirPermissions os.FileMode `mapstructure:"target_dir_permissions"`
+	TextFilePermissions  os.FileMode `mapstructure:"text_file_permissions"`
 
-	MaxFlattenerWorkers    int
-	MaxImageWorkers        int
-	MaxVideoWorkers        int
-	ImageConversionTimeout time.Duration
-	VideoExtractTimeout    time.Duration
+	MaxFlattenerWorkers    int           `mapstructure:"max_flattener_workers"`
+	MaxImageWorkers        int           `mapstructure:"max_image_workers"`
+	MaxVideoWorkers        int           `mapstructure:"max_video_workers"`
+	ImageConversionTimeout time.Duration `mapstructure:"image_conversion_timeout"`
+	VideoExtractTimeout    time.Duration `mapstructure:"video_extract_timeout"`
 
-	EstFileCount      int
-	FlatPathDelimiter string
-	EscapedDelimiter  string
-	DecodePlaceholder string
+	EstFileCount      int    `mapstructure:"est_file_count"`
+	FlatPathDelimiter string `mapstructure:"flat_path_delimiter"`
+	EscapedDelimiter  string `mapstructure:"escaped_delimiter"`
+	DecodePlaceholder string `mapstructure:"decode_placeholder"`
 
-	MaxArchiveFileBytes int64
-	MaxPDFFileBytes     int64
-	MaxTextFileBytes    int64
+	MaxArchiveFileBytes int64 `mapstructure:"max_archive_file_bytes"`
+	MaxPDFFileBytes     int64 `mapstructure:"max_pdf_file_bytes"`
+	MaxTextFileBytes    int64 `mapstructure:"max_text_file_bytes"`
 
-	FilterExtensions         map[string]bool
-	ImageExtensions          map[string]bool
-	SupportedImageExtensions map[string]bool
-	VideoExtensions          map[string]bool
-	VisualExtensions         map[string]bool
+	FilterExtensions         map[string]bool `mapstructure:"filter_extensions"`
+	ImageExtensions          map[string]bool `mapstructure:"image_extensions"`
+	SupportedImageExtensions map[string]bool `mapstructure:"supported_image_extensions"`
+	VideoExtensions          map[string]bool `mapstructure:"video_extensions"`
+	VisualExtensions         map[string]bool `mapstructure:"visual_extensions"`
 
-	RunFlattener      bool
-	RunTARFlattener   bool
-	RunFilter         bool
-	RunImageConverter bool
-	RunVideoExtractor bool
-	RunVisualMerger   bool
-	RunTextMerger     bool
+	Verbose            bool `mapstructure:"verbose"`
+	SkipFlattener      bool `mapstructure:"skip_flattener"`
+	SkipTARFlattener   bool `mapstructure:"skip_tar_flattener"`
+	SkipFilter         bool `mapstructure:"skip_filter"`
+	SkipImageConverter bool `mapstructure:"skip_image_converter"`
+	SkipVideoExtractor bool `mapstructure:"skip_video_extractor"`
+	SkipVisualMerger   bool `mapstructure:"skip_visual_merger"`
+	SkipTextMerger     bool `mapstructure:"skip_text_merger"`
 }
 
 const (
@@ -71,59 +84,126 @@ const (
 	defaultVideoExtensions          = "nil"
 	defaultVisualExtensions         = ".pdf," + defaultSupportedImageExtensions
 
-	defaultRunFlattener      = true
-	defaultRunTARFlattener   = !isWindows
-	defaultRunFilter         = true
-	defaultRunImageConverter = true
-	defaultRunVideoExtractor = true
-	defaultRunVisualMerger   = true
-	defaultRunTextMerger     = true
+	defaultVerbose            = false
+	defaultSkipFlattener      = false
+	defaultSkipTARFlattener   = isWindows
+	defaultSkipFilter         = false
+	defaultSkipImageConverter = false
+	defaultSkipVideoExtractor = false
+	defaultSkipVisualMerger   = false
+	defaultSkipTextMerger     = false
 )
 
-// Load reads the configuration from environment variables and returns a Config struct.
-func Load() *Config {
-	filePathDelimiter := EnvOr("FLAT_PATH_DELIMITER", defaultFlatPathDelimiter)
+// NewViper returns a Viper instance configured with the application defaults.
+func NewViper() *viper.Viper {
+	v := viper.New()
+	v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+	v.AutomaticEnv()
 
-	return &Config{
-		SourceDir:            EnvOr("SOURCE_DIR", defaultSourceDir),
-		TargetDir:            EnvOr("TARGET_DIR", defaultTargetDir),
-		TargetDirPermissions: EnvOr("TARGET_DIR_PERMISSIONS", defaultTargetDirPermissions),
-		TextFilePermissions:  EnvOr("TEXT_FILE_PERMISSIONS", defaultTextFilePermissions),
+	v.SetDefault("source_dir", defaultSourceDir)
+	v.SetDefault("target_dir", defaultTargetDir)
+	v.SetDefault("target_dir_permissions", defaultTargetDirPermissions)
+	v.SetDefault("text_file_permissions", defaultTextFilePermissions)
 
-		MaxFlattenerWorkers: EnvOr(
-			"MAX_FLATTENER_WORKERS",
-			defaultMaxFlattenerWorkers,
-		),
-		MaxImageWorkers:        EnvOr("MAX_IMAGE_WORKERS", defaultMaxImageWorkers),
-		MaxVideoWorkers:        EnvOr("MAX_VIDEO_WORKERS", defaultMaxVideoWorkers),
-		ImageConversionTimeout: EnvOr("IMAGE_CONVERSION_TIMEOUT", defaultImageConversionTimeout),
-		VideoExtractTimeout:    EnvOr("VIDEO_EXTRACT_TIMEOUT", defaultVideoExtractTimeout),
+	v.SetDefault("max_flattener_workers", defaultMaxFlattenerWorkers)
+	v.SetDefault("max_image_workers", defaultMaxImageWorkers)
+	v.SetDefault("max_video_workers", defaultMaxVideoWorkers)
+	v.SetDefault("image_conversion_timeout", defaultImageConversionTimeout)
+	v.SetDefault("video_extract_timeout", defaultVideoExtractTimeout)
 
-		EstFileCount:      EnvOr("EST_FILE_COUNT", defaultEstFileCount),
-		FlatPathDelimiter: filePathDelimiter,
-		EscapedDelimiter:  EnvOr("ESCAPED_DELIMITER", filePathDelimiter+filePathDelimiter),
-		DecodePlaceholder: EnvOr("DECODE_PLACEHOLDER", defaultDecodePlaceholder),
+	v.SetDefault("est_file_count", defaultEstFileCount)
+	v.SetDefault("flat_path_delimiter", defaultFlatPathDelimiter)
+	v.SetDefault("escaped_delimiter", defaultFlatPathDelimiter+defaultFlatPathDelimiter)
+	v.SetDefault("decode_placeholder", defaultDecodePlaceholder)
 
-		MaxArchiveFileBytes: EnvOr("MAX_ARCHIVE_FILE_BYTES", defaultMaxArchiveFileBytes),
-		MaxPDFFileBytes:     EnvOr("MAX_PDF_FILE_BYTES", defaultMaxPDFFileBytes),
-		MaxTextFileBytes:    EnvOr("MAX_TEXT_FILE_BYTES", defaultMaxTextFileBytes),
+	v.SetDefault("max_archive_file_bytes", defaultMaxArchiveFileBytes)
+	v.SetDefault("max_pdf_file_bytes", defaultMaxPDFFileBytes)
+	v.SetDefault("max_text_file_bytes", defaultMaxTextFileBytes)
 
-		FilterExtensions: EnvMapOr("FILTER_EXTENSIONS", defaultFilterExtensions),
-		ImageExtensions:  EnvMapOr("IMAGE_EXTENSIONS", defaultImageExtensions),
-		SupportedImageExtensions: EnvMapOr(
-			"SUPPORTED_IMAGE_EXTENSIONS",
-			defaultSupportedImageExtensions,
-		),
-		VideoExtensions:  EnvMapOr("VIDEO_EXTENSIONS", defaultVideoExtensions),
-		VisualExtensions: EnvMapOr("VISUAL_EXTENSIONS", defaultVisualExtensions),
+	v.SetDefault("filter_extensions", extensionSet(defaultFilterExtensions))
+	v.SetDefault("image_extensions", extensionSet(defaultImageExtensions))
+	v.SetDefault("supported_image_extensions", extensionSet(defaultSupportedImageExtensions))
+	v.SetDefault("video_extensions", extensionSet(defaultVideoExtensions))
+	v.SetDefault("visual_extensions", extensionSet(defaultVisualExtensions))
 
-		RunFlattener:      EnvOr("RUN_FLATTENER", defaultRunFlattener),
-		RunTARFlattener:   EnvOr("RUN_TAR_FLATTENER", defaultRunTARFlattener),
-		RunFilter:         EnvOr("RUN_FILTER", defaultRunFilter),
-		RunImageConverter: EnvOr("RUN_IMAGE_CONVERTER", defaultRunImageConverter),
-		RunVideoExtractor: EnvOr("RUN_VIDEO_EXTRACTOR", defaultRunVideoExtractor),
-		RunVisualMerger:   EnvOr("RUN_VISUAL_MERGER", defaultRunVisualMerger),
-		RunTextMerger:     EnvOr("RUN_TEXT_MERGER", defaultRunTextMerger),
+	v.SetDefault("verbose", defaultVerbose)
+	v.SetDefault("skip_flattener", defaultSkipFlattener)
+	v.SetDefault("skip_tar_flattener", defaultSkipTARFlattener)
+	v.SetDefault("skip_filter", defaultSkipFilter)
+	v.SetDefault("skip_image_converter", defaultSkipImageConverter)
+	v.SetDefault("skip_video_extractor", defaultSkipVideoExtractor)
+	v.SetDefault("skip_visual_merger", defaultSkipVisualMerger)
+	v.SetDefault("skip_text_merger", defaultSkipTextMerger)
+
+	return v
+}
+
+// Load reads an optional config JSON, TOML, or YAML file.
+// Flags and environment variables take precedence over file values.
+func Load(v *viper.Viper, configFile string) (*Config, error) {
+	if configFile != "" {
+		v.SetConfigFile(configFile)
+
+		if err := v.ReadInConfig(); err != nil {
+			return nil, fmt.Errorf("read config file %q: %w", configFile, err)
+		}
+	}
+
+	var cfg Config
+	if err := v.Unmarshal(
+		&cfg,
+		viper.DecodeHook(mapstructure.ComposeDecodeHookFunc(
+			mapstructure.StringToTimeDurationHookFunc(),
+			stringToExtensionSetHook(),
+		)),
+	); err != nil {
+		return nil, fmt.Errorf("decode configuration: %w", err)
+	}
+
+	if cfg.SourceDir == "" {
+		return nil, fmt.Errorf(
+			"%w: must be set via flag, env, or config file",
+			errSourceDirRequired,
+		)
+	}
+	if cfg.TargetDir == "" {
+		return nil, fmt.Errorf(
+			"%w: must be set via flag, env, or config file",
+			errTargetDirRequired,
+		)
+	}
+
+	return &cfg, nil
+}
+
+func extensionSet(value string) map[string]bool {
+	if value == "nil" {
+		return nil
+	}
+
+	set := make(map[string]bool)
+	for entry := range strings.SplitSeq(value, ",") {
+		if entry = strings.TrimSpace(entry); entry != "" {
+			set[entry] = true
+		}
+	}
+
+	return set
+}
+
+func stringToExtensionSetHook() mapstructure.DecodeHookFuncType {
+	target := reflect.TypeFor[map[string]bool]()
+
+	return func(from, to reflect.Type, data any) (any, error) {
+		if from.Kind() == reflect.String && to == target {
+			str, ok := data.(string)
+			if !ok {
+				return nil, fmt.Errorf("%w: got %T", errInvalidExtensionSetType, data)
+			}
+			return extensionSet(str), nil
+		}
+
+		return data, nil
 	}
 }
 

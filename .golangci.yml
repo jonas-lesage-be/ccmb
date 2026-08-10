@@ -25,12 +25,16 @@ linters:
           allow:
             - $gostd
             - ccmb
+            - github.com/go-viper/mapstructure/v2
             - github.com/klauspost/compress/gzip
             - github.com/klauspost/compress/zip
             - github.com/klauspost/compress/zstd
             - github.com/pdfcpu/pdfcpu/pkg/api
             - github.com/pdfcpu/pdfcpu/pkg/pdfcpu
             - github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types
+            - github.com/spf13/cobra
+            - github.com/spf13/pflag
+            - github.com/spf13/viper
             - golang.org/x/sync/errgroup
 
     ireturn:

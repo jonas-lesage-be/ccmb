@@ -1,11 +1,18 @@
 package main
 
 import (
-	"ccmb/internal/config"
-	"ccmb/internal/pipeline"
+	"context"
+	"log/slog"
+	"os"
+
+	"ccmb/internal/cli"
 )
 
 func main() {
-	cfg := config.Load()
-	pipeline.Execute(cfg)
+	ctx := context.Background()
+
+	if err := cli.NewRootCommand(ctx).Execute(); err != nil {
+		slog.Error("Command execution failed", "err", err)
+		os.Exit(1)
+	}
 }
