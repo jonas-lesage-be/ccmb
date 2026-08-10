@@ -59,8 +59,13 @@ func NewRootCommand(ctx context.Context) *cobra.Command {
 				return fmt.Errorf("failed to load configuration: %w", err)
 			}
 
+			logLevel := slog.LevelInfo
+			if cfg.Verbose {
+				logLevel = slog.LevelDebug
+			}
+
 			logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
-				Level: slog.LevelInfo,
+				Level: logLevel,
 			}))
 			slog.SetDefault(logger)
 
@@ -122,6 +127,7 @@ func bindFlags(cmd *cobra.Command, v *viper.Viper) error {
 	flags.String("video-extensions", "", "Comma-separated video extensions to extract")
 	flags.String("visual-extensions", "", "Comma-separated visual extensions to merge")
 
+	flags.BoolP("verbose", "v", false, "Enable verbose logging")
 	flags.Bool("skip-flattener", false, "Skip the flattener")
 	flags.Bool("skip-tar-flattener", false, "Skip TAR flattener support")
 	flags.Bool("skip-filter", false, "Skip the filter")

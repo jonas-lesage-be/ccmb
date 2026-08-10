@@ -30,8 +30,10 @@ type Flattener struct {
 	FlatPathDelimiter string
 	EscapedDelimiter  string
 
-	MaxArchiveFileBytes int64
-	FilterExtensions    map[string]bool
+	MaxArchiveFileBytes      int64
+	FilterExtensions         map[string]bool
+	SkipTARFlattener         bool
+	SkipTARFlattenerExplicit bool
 }
 
 // NewFlattener creates a new instance of Flattener using the application configuration.
@@ -47,14 +49,24 @@ func NewFlattener(cfg *config.Config) *Flattener {
 		FlatPathDelimiter: cfg.FlatPathDelimiter,
 		EscapedDelimiter:  cfg.EscapedDelimiter,
 
-		MaxArchiveFileBytes: cfg.MaxArchiveFileBytes,
-		FilterExtensions:    cfg.FilterExtensions,
+		MaxArchiveFileBytes:      cfg.MaxArchiveFileBytes,
+		FilterExtensions:         cfg.FilterExtensions,
+		SkipTARFlattener:         cfg.SkipTARFlattener,
+		SkipTARFlattenerExplicit: cfg.SkipTARFlattenerExplicit,
 	}
 }
 
 // Execute scans the source directory and flattens files into the target directory.
 func (f *Flattener) Execute(ctx context.Context) error {
 	slog.Debug("Starting directory flattening")
+
+	if f.SkipTARFlattener && !f.SkipTARFlattenerExplicit {
+		slog.Info(
+			"TAR archive flattening disabled",
+			"reason",
+			"unreliable on this platform, override with --skip-tar-flattener=false",
+		)
+	}
 
 	if err := os.MkdirAll(f.TargetDir, f.TargetDirPermissions); err != nil {
 		return fmt.Errorf("failed to create target directory: %w", err)

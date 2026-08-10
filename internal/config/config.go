@@ -16,9 +16,9 @@ import (
 )
 
 var (
-	errInvalidExtensionSetType = errors.New("expected string for extension set")
-	errSourceDirRequired       = errors.New("source-dir is required")
-	errTargetDirRequired       = errors.New("target-dir is required")
+	errInvalidBoolMapType = errors.New("expected string for bool map")
+	errSourceDirRequired  = errors.New("source-dir is required")
+	errTargetDirRequired  = errors.New("target-dir is required")
 )
 
 // Config holds the configuration settings for the application.
@@ -49,14 +49,15 @@ type Config struct {
 	VideoExtensions          map[string]bool `mapstructure:"video_extensions"`
 	VisualExtensions         map[string]bool `mapstructure:"visual_extensions"`
 
-	Verbose            bool `mapstructure:"verbose"`
-	SkipFlattener      bool `mapstructure:"skip_flattener"`
-	SkipTARFlattener   bool `mapstructure:"skip_tar_flattener"`
-	SkipFilter         bool `mapstructure:"skip_filter"`
-	SkipImageConverter bool `mapstructure:"skip_image_converter"`
-	SkipVideoExtractor bool `mapstructure:"skip_video_extractor"`
-	SkipVisualMerger   bool `mapstructure:"skip_visual_merger"`
-	SkipTextMerger     bool `mapstructure:"skip_text_merger"`
+	Verbose                  bool `mapstructure:"verbose"`
+	SkipFlattener            bool `mapstructure:"skip_flattener"`
+	SkipTARFlattener         bool `mapstructure:"skip_tar_flattener"`
+	SkipTARFlattenerExplicit bool `mapstructure:"-"`
+	SkipFilter               bool `mapstructure:"skip_filter"`
+	SkipImageConverter       bool `mapstructure:"skip_image_converter"`
+	SkipVideoExtractor       bool `mapstructure:"skip_video_extractor"`
+	SkipVisualMerger         bool `mapstructure:"skip_visual_merger"`
+	SkipTextMerger           bool `mapstructure:"skip_text_merger"`
 }
 
 const (
@@ -120,15 +121,14 @@ func NewViper() *viper.Viper {
 	v.SetDefault("max_pdf_file_bytes", defaultMaxPDFFileBytes)
 	v.SetDefault("max_text_file_bytes", defaultMaxTextFileBytes)
 
-	v.SetDefault("filter_extensions", extensionSet(defaultFilterExtensions))
-	v.SetDefault("image_extensions", extensionSet(defaultImageExtensions))
-	v.SetDefault("supported_image_extensions", extensionSet(defaultSupportedImageExtensions))
-	v.SetDefault("video_extensions", extensionSet(defaultVideoExtensions))
-	v.SetDefault("visual_extensions", extensionSet(defaultVisualExtensions))
+	v.SetDefault("filter_extensions", parseBoolMap(defaultFilterExtensions))
+	v.SetDefault("image_extensions", parseBoolMap(defaultImageExtensions))
+	v.SetDefault("supported_image_extensions", parseBoolMap(defaultSupportedImageExtensions))
+	v.SetDefault("video_extensions", parseBoolMap(defaultVideoExtensions))
+	v.SetDefault("visual_extensions", parseBoolMap(defaultVisualExtensions))
 
 	v.SetDefault("verbose", defaultVerbose)
 	v.SetDefault("skip_flattener", defaultSkipFlattener)
-	v.SetDefault("skip_tar_flattener", defaultSkipTARFlattener)
 	v.SetDefault("skip_filter", defaultSkipFilter)
 	v.SetDefault("skip_image_converter", defaultSkipImageConverter)
 	v.SetDefault("skip_video_extractor", defaultSkipVideoExtractor)
@@ -154,10 +154,15 @@ func Load(v *viper.Viper, configFile string) (*Config, error) {
 		&cfg,
 		viper.DecodeHook(mapstructure.ComposeDecodeHookFunc(
 			mapstructure.StringToTimeDurationHookFunc(),
-			stringToExtensionSetHook(),
+			stringToBoolMapHook(),
 		)),
 	); err != nil {
 		return nil, fmt.Errorf("decode configuration: %w", err)
+	}
+
+	cfg.SkipTARFlattenerExplicit = v.IsSet("skip_tar_flattener")
+	if !cfg.SkipTARFlattenerExplicit {
+		cfg.SkipTARFlattener = isWindows
 	}
 
 	if cfg.SourceDir == "" {
@@ -176,7 +181,7 @@ func Load(v *viper.Viper, configFile string) (*Config, error) {
 	return &cfg, nil
 }
 
-func extensionSet(value string) map[string]bool {
+func parseBoolMap(value string) map[string]bool {
 	if value == "nil" {
 		return nil
 	}
@@ -191,16 +196,16 @@ func extensionSet(value string) map[string]bool {
 	return set
 }
 
-func stringToExtensionSetHook() mapstructure.DecodeHookFuncType {
+func stringToBoolMapHook() mapstructure.DecodeHookFuncType {
 	target := reflect.TypeFor[map[string]bool]()
 
 	return func(from, to reflect.Type, data any) (any, error) {
 		if from.Kind() == reflect.String && to == target {
 			str, ok := data.(string)
 			if !ok {
-				return nil, fmt.Errorf("%w: got %T", errInvalidExtensionSetType, data)
+				return nil, fmt.Errorf("%w: got %T", errInvalidBoolMapType, data)
 			}
-			return extensionSet(str), nil
+			return parseBoolMap(str), nil
 		}
 
 		return data, nil

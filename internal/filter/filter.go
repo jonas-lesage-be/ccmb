@@ -43,7 +43,7 @@ func (f *Filter) Execute() error {
 			if err := os.Remove(path); err != nil {
 				slog.Error("Failed to delete file", "filename", file.Name(), "err", err)
 			} else {
-				slog.Error("Deleted unsupported file", "filename", file.Name())
+				slog.Debug("Deleted unsupported file", "filename", file.Name())
 			}
 		}
 	}
