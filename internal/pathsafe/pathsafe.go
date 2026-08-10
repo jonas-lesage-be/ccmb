@@ -27,8 +27,8 @@ func Contains(baseDir, targetPath string) bool {
 		return false
 	}
 	defer func() {
-		if cErr := root.Close(); cErr != nil {
-			slog.Error("failed to close root directory", "error", cErr)
+		if err := root.Close(); err != nil {
+			slog.Error("failed to close root directory", "err", err)
 		}
 	}()
 

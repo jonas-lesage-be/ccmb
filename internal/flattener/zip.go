@@ -17,13 +17,13 @@ func (f *Flattener) handleZIP(ctx context.Context, zipPath string) error {
 		return fmt.Errorf("context error before processing ZIP %s: %w", zipPath, err)
 	}
 
-	r, err := kzip.OpenReader(zipPath)
+	rc, err := kzip.OpenReader(zipPath)
 	if err != nil {
 		return fmt.Errorf("failed to open zip file %s: %w", zipPath, err)
 	}
 	defer func() {
-		if errClose := r.Close(); errClose != nil {
-			slog.Error("failed to close zip reader", "error", errClose)
+		if err := rc.Close(); err != nil {
+			slog.Error("failed to close zip reader", "err", err)
 		}
 	}()
 
@@ -34,7 +34,7 @@ func (f *Flattener) handleZIP(ctx context.Context, zipPath string) error {
 	zipPrefix := config.EncodeFlatName(relZIP, f.FlatPathDelimiter, f.EscapedDelimiter)
 	zipPrefix = strings.TrimSuffix(zipPrefix, filepath.Ext(zipPrefix))
 
-	for _, file := range r.File {
+	for _, file := range rc.File {
 		if err := ctx.Err(); err != nil {
 			return fmt.Errorf("context error while processing ZIP %s: %w", zipPath, err)
 		}
@@ -48,7 +48,7 @@ func (f *Flattener) handleZIP(ctx context.Context, zipPath string) error {
 		targetPath := filepath.Join(f.TargetDir, finalFlatName)
 
 		if err := f.extractZIPMember(ctx, file, targetPath); err != nil {
-			slog.Error("failed to extract from zip", "member", file.Name, "error", err)
+			slog.Error("failed to extract from zip", "member", file.Name, "err", err)
 		}
 	}
 
@@ -65,8 +65,8 @@ func (f *Flattener) extractZIPMember(
 		return fmt.Errorf("failed to open zip member %s: %w", file.Name, err)
 	}
 	defer func() {
-		if errClose := rc.Close(); errClose != nil {
-			slog.Error("failed to close zip member stream", "error", errClose)
+		if err := rc.Close(); err != nil {
+			slog.Error("failed to close zip member stream", "err", err)
 		}
 	}()
 

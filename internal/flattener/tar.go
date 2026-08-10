@@ -40,8 +40,8 @@ func (f *Flattener) handleTAR(ctx context.Context, path string, wrapReader wrapR
 		return fmt.Errorf("failed to open %s file %s: %w", ext, path, err)
 	}
 	defer func() {
-		if errClose := fi.Close(); errClose != nil {
-			slog.Error("failed to close file stream", "type", ext, "error", errClose)
+		if err := fi.Close(); err != nil {
+			slog.Error("failed to close file stream", "type", ext, "err", err)
 		}
 	}()
 
@@ -51,8 +51,8 @@ func (f *Flattener) handleTAR(ctx context.Context, path string, wrapReader wrapR
 	}
 	if closer != nil {
 		defer func() {
-			if errClose := closer.Close(); errClose != nil {
-				slog.Error("failed to close reader", "type", ext, "error", errClose)
+			if err := closer.Close(); err != nil {
+				slog.Error("failed to close reader", "type", ext, "err", err)
 			}
 		}()
 	}
@@ -91,7 +91,7 @@ func (f *Flattener) processTARStream(
 				header.Name,
 				"file",
 				filepath.Base(path),
-				"error",
+				"err",
 				err,
 			)
 		}

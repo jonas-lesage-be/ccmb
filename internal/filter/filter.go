@@ -41,7 +41,7 @@ func (f *Filter) Execute() error {
 		if ext := flattener.Extension(file.Name()); f.FilterExtensions[ext] {
 			path := filepath.Join(f.TargetDir, file.Name())
 			if err := os.Remove(path); err != nil {
-				slog.Error("Failed to delete file", "filename", file.Name(), "error", err)
+				slog.Error("Failed to delete file", "filename", file.Name(), "err", err)
 			} else {
 				slog.Error("Deleted unsupported file", "filename", file.Name())
 			}

@@ -98,7 +98,7 @@ func runIf(shouldRun bool, step pipelineStep, f func() error) {
 
 	startTime := time.Now()
 	if err := f(); err != nil {
-		logger.Error("Pipeline aborted", "error", err)
+		logger.Error("Pipeline aborted", "err", err)
 		return
 	}
 	duration := time.Since(startTime)

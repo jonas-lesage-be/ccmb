@@ -85,7 +85,7 @@ func (m *Merger) processVisualFiles(ctx context.Context, files []string) error {
 
 		convertedPDF, size, err := m.preparePDFComponent(ctx, path)
 		if err != nil {
-			slog.Warn("Skipping asset", "file", filepath.Base(path), "error", err)
+			slog.Warn("Skipping asset", "file", filepath.Base(path), "err", err)
 			continue
 		}
 

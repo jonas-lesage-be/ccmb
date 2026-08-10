@@ -26,8 +26,8 @@ func (m *Merger) preparePDFComponent(ctx context.Context, path string) (string, 
 	fi, err := os.Stat(convertedPDF)
 	if err != nil {
 		if !errors.Is(err, os.ErrNotExist) {
-			if rmErr := os.Remove(convertedPDF); rmErr != nil {
-				slog.Error("Failed to delete file", "path", convertedPDF, "error", rmErr)
+			if err := os.Remove(convertedPDF); err != nil {
+				slog.Error("Failed to delete file", "path", convertedPDF, "err", err)
 			}
 		}
 		return "", 0, fmt.Errorf("failed to check PDF status: %w", err)

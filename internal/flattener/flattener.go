@@ -177,13 +177,13 @@ func (f *Flattener) copyFileSecure(ctx context.Context, src, dst string) error {
 
 	shouldCleanup := true
 	defer func() {
-		if errClose := out.Close(); errClose != nil {
-			slog.Error("failed to close written file", "error", errClose)
+		if err := out.Close(); err != nil {
+			slog.Error("failed to close written file", "err", err)
 		}
 
 		if shouldCleanup {
-			if errRemove := os.Remove(dst); errRemove != nil {
-				slog.Error("failed to remove incomplete file", "path", dst, "error", errRemove)
+			if err := os.Remove(dst); err != nil {
+				slog.Error("failed to remove incomplete file", "path", dst, "err", err)
 			}
 		}
 	}()
@@ -193,8 +193,8 @@ func (f *Flattener) copyFileSecure(ctx context.Context, src, dst string) error {
 		return fmt.Errorf("failed to open source file %s: %w", src, err)
 	}
 	defer func() {
-		if errClose := in.Close(); errClose != nil {
-			slog.Error("failed to close source stream", "error", errClose)
+		if err := in.Close(); err != nil {
+			slog.Error("failed to close source stream", "err", err)
 		}
 	}()
 

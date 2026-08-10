@@ -59,18 +59,12 @@ func (f *Flattener) extractFileStream(
 
 	shouldCleanup := true
 	defer func() {
-		if errClose := out.Close(); errClose != nil {
-			slog.Error("failed to safely close output file", "error", errClose)
+		if err := out.Close(); err != nil {
+			slog.Error("failed to safely close output file", "err", err)
 		}
 		if shouldCleanup {
-			if errRemove := os.Remove(cleanedPath); errRemove != nil {
-				slog.Error(
-					"failed to remove incomplete file",
-					"path",
-					cleanedPath,
-					"error",
-					errRemove,
-				)
+			if err := os.Remove(cleanedPath); err != nil {
+				slog.Error("failed to remove incomplete file", "path", cleanedPath, "err", err)
 			}
 		}
 	}()
