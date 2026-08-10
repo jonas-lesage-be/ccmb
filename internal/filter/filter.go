@@ -5,9 +5,9 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"ccmb/internal/config"
+	"ccmb/internal/flattener"
 )
 
 // Filter is responsible for filtering out files with unsupported extensions.
@@ -38,7 +38,7 @@ func (f *Filter) Execute() error {
 			continue
 		}
 
-		if ext := strings.ToLower(filepath.Ext(file.Name())); f.FilterExtensions[ext] {
+		if ext := flattener.Extension(file.Name()); f.FilterExtensions[ext] {
 			fullPath := filepath.Join(f.TargetDir, file.Name())
 			if err := os.Remove(fullPath); err != nil {
 				slog.Error("Failed to delete file", "filename", file.Name(), "error", err)

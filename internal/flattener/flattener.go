@@ -123,7 +123,12 @@ func (f *Flattener) processFile(ctx context.Context, path string) error {
 		return fmt.Errorf("context error while processing file %s: %w", path, err)
 	}
 
-	ext := f.extension(path)
+	ext := Extension(path)
+	if f.FilterExtensions[ext] {
+		slog.Info("Skipping filtered file", "file", filepath.Base(path), "extension", ext)
+		return nil
+	}
+
 	displayExt := strings.TrimPrefix(strings.ToUpper(ext), ".")
 	handler := f.handlerForExtension(ext)
 
@@ -200,7 +205,7 @@ func (f *Flattener) resolveCollision(path string) string {
 		return path
 	}
 
-	ext := f.extension(path)
+	ext := Extension(path)
 	base := strings.TrimSuffix(path, ext)
 
 	for counter := 1; ; counter++ {

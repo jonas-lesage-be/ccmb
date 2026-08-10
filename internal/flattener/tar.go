@@ -22,23 +22,6 @@ func (f funcCloser) Close() error {
 	return f()
 }
 
-func (f *Flattener) extension(path string) string {
-	lowerPath := strings.ToLower(path)
-
-	switch {
-	case strings.HasSuffix(lowerPath, ".tar.gz"):
-		return ".tar.gz"
-	case strings.HasSuffix(lowerPath, ".tar.xz"):
-		return ".tar.xz"
-	case strings.HasSuffix(lowerPath, ".tar.zst"):
-		return ".tar.zst"
-	case strings.HasSuffix(lowerPath, ".tar.bz2"):
-		return ".tar.bz2"
-	}
-
-	return filepath.Ext(lowerPath)
-}
-
 func (f *Flattener) handlePlainTAR(ctx context.Context, path string) error {
 	return f.handleTAR(ctx, path, func(r io.Reader) (io.Reader, io.Closer, error) {
 		return r, nil, nil
@@ -46,7 +29,7 @@ func (f *Flattener) handlePlainTAR(ctx context.Context, path string) error {
 }
 
 func (f *Flattener) handleTAR(ctx context.Context, path string, wrapReader wrapReaderFunc) error {
-	ext := f.extension(path)
+	ext := Extension(path)
 
 	if err := ctx.Err(); err != nil {
 		return fmt.Errorf("context error before processing %s %s: %w", ext, path, err)
@@ -160,4 +143,22 @@ func (f *Flattener) extractTARMember(
 	}
 
 	return nil
+}
+
+// Extension returns the file extension, handling special cases for compressed tar files.
+func Extension(path string) string {
+	lowerPath := strings.ToLower(path)
+
+	switch {
+	case strings.HasSuffix(lowerPath, ".tar.gz"):
+		return ".tar.gz"
+	case strings.HasSuffix(lowerPath, ".tar.xz"):
+		return ".tar.xz"
+	case strings.HasSuffix(lowerPath, ".tar.zst"):
+		return ".tar.zst"
+	case strings.HasSuffix(lowerPath, ".tar.bz2"):
+		return ".tar.bz2"
+	}
+
+	return filepath.Ext(lowerPath)
 }

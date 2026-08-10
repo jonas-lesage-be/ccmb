@@ -39,6 +39,7 @@ type Config struct {
 	TextFilePermissions  os.FileMode
 
 	RunFlattener      bool
+	RunTARFlattener   bool
 	RunFilter         bool
 	RunImageConverter bool
 	RunVideoExtractor bool
@@ -58,15 +59,14 @@ const (
 	defaultImageConversionTimeout = 15 * time.Second
 	defaultVideoExtractTimeout    = 1 * time.Minute
 
-	defaultFilterExtensions         = ".ttf,.woff,.woff2"
 	defaultImageExtensions          = "nil"
 	defaultSupportedImageExtensions = ".jpg,.jpeg,.png,.webp,.tif,.tiff"
 	defaultVideoExtensions          = "nil"
 	defaultVisualExtensions         = ".pdf," + defaultSupportedImageExtensions
 
 	defaultMaxZIPFileBytes  int64 = 4 * conv.GiB
-	defaultMaxPDFFileBytes  int64 = 128 * conv.MiB
-	defaultMaxTextFileBytes int64 = 128 * conv.MiB
+	defaultMaxPDFFileBytes  int64 = 48 * conv.MiB
+	defaultMaxTextFileBytes int64 = 2 * conv.MiB
 
 	defaultSourceDir                        = "."
 	defaultTargetDir                        = "./_ccmb_output"
@@ -74,6 +74,7 @@ const (
 	defaultTextFilePermissions  os.FileMode = 0o600
 
 	defaultRunFlattener      = true
+	defaultRunTARFlattener   = !isWindows
 	defaultRunFilter         = true
 	defaultRunImageConverter = true
 	defaultRunVideoExtractor = true
@@ -120,6 +121,7 @@ func Load() *Config {
 		TextFilePermissions:  EnvOr("TEXT_FILE_PERMISSIONS", defaultTextFilePermissions),
 
 		RunFlattener:      EnvOr("RUN_FLATTENER", defaultRunFlattener),
+		RunTARFlattener:   EnvOr("RUN_TAR_FLATTENER", defaultRunTARFlattener),
 		RunFilter:         EnvOr("RUN_FILTER", defaultRunFilter),
 		RunImageConverter: EnvOr("RUN_IMAGE_CONVERTER", defaultRunImageConverter),
 		RunVideoExtractor: EnvOr("RUN_VIDEO_EXTRACTOR", defaultRunVideoExtractor),
