@@ -45,7 +45,8 @@ func NewExtractor(cfg *config.Config) *Extractor {
 
 // Execute extracts 1 frame per second calls.
 func (e *Extractor) Execute(ctx context.Context) error {
-	slog.Info("Extracting frames out of videos")
+	slog.Debug("Extracting frames out of videos")
+
 	files, err := os.ReadDir(e.TargetDir)
 	if err != nil {
 		return fmt.Errorf("failed to read target directory: %w", err)

@@ -54,7 +54,7 @@ func NewFlattener(cfg *config.Config) *Flattener {
 
 // Execute scans the source directory and flattens files into the target directory.
 func (f *Flattener) Execute(ctx context.Context) error {
-	slog.Info("Starting directory flattening")
+	slog.Debug("Starting directory flattening")
 
 	if err := os.MkdirAll(f.TargetDir, f.TargetDirPermissions); err != nil {
 		return fmt.Errorf("failed to create target directory: %w", err)
@@ -131,7 +131,7 @@ func (f *Flattener) processFile(ctx context.Context, path string) error {
 
 	ext := Extension(path)
 	if f.FilterExtensions[ext] {
-		slog.Info("Skipping filtered file", "file", filepath.Base(path), "extension", ext)
+		slog.Debug("Skipping filtered file", "file", filepath.Base(path), "extension", ext)
 		return nil
 	}
 
@@ -139,7 +139,7 @@ func (f *Flattener) processFile(ctx context.Context, path string) error {
 	handler := f.handlerForExtension(ext)
 
 	if handler != nil {
-		slog.Info("archive found, extracting", "type", displayExt, "file", filepath.Base(path))
+		slog.Debug("Archive found, extracting", "type", displayExt, "file", filepath.Base(path))
 		if err := handler(ctx, path); err != nil {
 			return fmt.Errorf("error processing %s %s: %w", displayExt, path, err)
 		}

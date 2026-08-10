@@ -45,7 +45,7 @@ func NewMerger(cfg *config.Config) *Merger {
 
 // Execute merges all text files (.py, .js, .txt) into size-constrained text files.
 func (m *Merger) Execute(ctx context.Context) error {
-	slog.Info("Merging all text files")
+	slog.Debug("Merging all text files")
 
 	if err := ctx.Err(); err != nil {
 		return fmt.Errorf("context error before starting text merge: %w", err)

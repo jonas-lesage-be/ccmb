@@ -26,7 +26,7 @@ func NewFilter(cfg *config.Config) *Filter {
 
 // Execute looks up all files in TargetDir and deletes unsupported files.
 func (f *Filter) Execute() error {
-	slog.Info("Removing files with an unsupported extension")
+	slog.Debug("Removing files with an unsupported extension")
 
 	files, err := os.ReadDir(f.TargetDir)
 	if err != nil {

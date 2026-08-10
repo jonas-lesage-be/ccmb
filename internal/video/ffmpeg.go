@@ -43,7 +43,7 @@ func (e *Extractor) extractFrames(ctx context.Context, path string) error {
 	baseName := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
 	outputPattern := filepath.Join(e.TargetDir, baseName+e.FlatPathDelimiter+"frame_%d.jpg")
 
-	slog.Info("Running FFmpeg to extract frames", "file", filepath.Base(path))
+	slog.Debug("Running FFmpeg to extract frames", "file", filepath.Base(path))
 
 	ctx, cancel := context.WithTimeout(ctx, e.Timeout)
 	defer cancel()

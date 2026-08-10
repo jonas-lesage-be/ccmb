@@ -34,7 +34,7 @@ func (c *Converter) convert(ctx context.Context, name, path string) error {
 	baseName := strings.TrimSuffix(name, filepath.Ext(name))
 	outputPath := filepath.Join(c.TargetDir, baseName+".png")
 
-	slog.Info("Converting unsupported image to PNG", "file", name)
+	slog.Debug("Converting unsupported image to PNG", "file", name)
 
 	ctx, cancel := context.WithTimeout(ctx, c.Timeout)
 	defer cancel()

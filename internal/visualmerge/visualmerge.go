@@ -40,7 +40,8 @@ func NewMerger(cfg *config.Config) *Merger {
 
 // Execute merges images and PDFs into size-constrained PDF files.
 func (m *Merger) Execute(ctx context.Context) error {
-	slog.Info("Converting and merging visual data")
+	slog.Debug("Converting and merging visual data")
+
 	files, err := os.ReadDir(m.TargetDir)
 	if err != nil {
 		return fmt.Errorf("failed to read target directory %s: %w", m.TargetDir, err)
