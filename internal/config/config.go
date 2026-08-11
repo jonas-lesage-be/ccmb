@@ -90,7 +90,7 @@ const (
 	defaultVerbose            = false
 	defaultSkipFlattener      = false
 	defaultSkipTARFlattener   = isWindows
-	defaultSkipFilter         = false
+	defaultSkipFilter         = true
 	defaultSkipImageConverter = false
 	defaultSkipVideoExtractor = false
 	defaultSkipVisualMerger   = false
