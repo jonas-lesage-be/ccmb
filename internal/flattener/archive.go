@@ -7,7 +7,6 @@ import (
 	"io"
 	"log/slog"
 	"os"
-	"path/filepath"
 )
 
 var errSizeExceedsLimit = errors.New("size exceeds maximum allowed limit")
@@ -42,17 +41,7 @@ func (f *Flattener) extractFileStream(
 		return fmt.Errorf("context error before extracting member %s: %w", memberName, err)
 	}
 
-	f.saveMutex.Lock()
-	targetPath = f.resolveCollision(targetPath)
-	cleanedPath := filepath.Clean(targetPath)
-
-	out, err := os.OpenFile(
-		cleanedPath,
-		os.O_WRONLY|os.O_CREATE|os.O_TRUNC,
-		mode,
-	)
-	f.saveMutex.Unlock()
-
+	out, uniquePath, err := f.createUnique(targetPath, mode)
 	if err != nil {
 		return fmt.Errorf("failed to create target file %s: %w", targetPath, err)
 	}
@@ -63,8 +52,8 @@ func (f *Flattener) extractFileStream(
 			slog.Error("failed to safely close output file", "err", err)
 		}
 		if shouldCleanup {
-			if err := os.Remove(cleanedPath); err != nil {
-				slog.Error("failed to remove incomplete file", "path", cleanedPath, "err", err)
+			if err := os.Remove(uniquePath); err != nil {
+				slog.Error("failed to remove incomplete file", "path", uniquePath, "err", err)
 			}
 		}
 	}()

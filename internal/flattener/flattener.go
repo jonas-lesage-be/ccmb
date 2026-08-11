@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	"golang.org/x/sync/errgroup"
 
@@ -18,8 +17,6 @@ import (
 
 // Flattener is responsible for flattening the directory structure of files.
 type Flattener struct {
-	saveMutex sync.Mutex
-
 	SourceDir            string
 	TargetDir            string
 	TargetDirPermissions os.FileMode
@@ -77,21 +74,24 @@ func (f *Flattener) Execute(ctx context.Context) error {
 		return fmt.Errorf("failed to get absolute target path: %w", err)
 	}
 
-	filesToProcess, err := f.collectFiles(ctx, absTarget)
-	if err != nil {
-		return err
-	}
-
 	g, ctx := errgroup.WithContext(ctx)
 	g.SetLimit(f.MaxFlattenerWorkers)
 
-	for _, path := range filesToProcess {
-		if err := ctx.Err(); err != nil {
-			return fmt.Errorf("context error while processing file %s: %w", path, err)
-		}
+	paths := make(chan string, f.MaxFlattenerWorkers)
 
+	g.Go(func() error {
+		defer close(paths)
+		return f.walkFiles(ctx, absTarget, paths)
+	})
+
+	for range f.MaxFlattenerWorkers {
 		g.Go(func() error {
-			return f.processFile(ctx, path)
+			for path := range paths {
+				if err := f.processFile(ctx, path); err != nil {
+					return err
+				}
+			}
+			return nil
 		})
 	}
 
@@ -102,9 +102,7 @@ func (f *Flattener) Execute(ctx context.Context) error {
 	return nil
 }
 
-func (f *Flattener) collectFiles(ctx context.Context, absTarget string) ([]string, error) {
-	filesToProcess := make([]string, 0, f.EstFileCount)
-
+func (f *Flattener) walkFiles(ctx context.Context, absTarget string, paths chan<- string) error {
 	err := filepath.WalkDir(f.SourceDir, func(srcPath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return fmt.Errorf("error accessing path %s: %w", srcPath, err)
@@ -126,14 +124,18 @@ func (f *Flattener) collectFiles(ctx context.Context, absTarget string) ([]strin
 			return nil
 		}
 
-		filesToProcess = append(filesToProcess, srcPath)
-		return nil
+		select {
+		case paths <- srcPath:
+			return nil
+		case <-ctx.Done():
+			return ctx.Err()
+		}
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed walking source directory: %w", err)
+		return fmt.Errorf("failed walking source directory: %w", err)
 	}
 
-	return filesToProcess, nil
+	return nil
 }
 
 func (f *Flattener) processFile(ctx context.Context, path string) error {
@@ -178,11 +180,7 @@ func (f *Flattener) copyFileSecure(ctx context.Context, src, dst string) error {
 		return fmt.Errorf("context error before copying file %s: %w", src, err)
 	}
 
-	f.saveMutex.Lock()
-	dst = f.resolveCollision(dst)
-	out, err := os.Create(filepath.Clean(dst))
-	f.saveMutex.Unlock()
-
+	out, resolvedDst, err := f.createUnique(dst, f.TargetDirPermissions)
 	if err != nil {
 		return fmt.Errorf("failed to create file %s: %w", dst, err)
 	}
@@ -194,8 +192,8 @@ func (f *Flattener) copyFileSecure(ctx context.Context, src, dst string) error {
 		}
 
 		if shouldCleanup {
-			if err := os.Remove(dst); err != nil {
-				slog.Error("failed to remove incomplete file", "path", dst, "err", err)
+			if err := os.Remove(resolvedDst); err != nil {
+				slog.Error("failed to remove incomplete file", "path", resolvedDst, "err", err)
 			}
 		}
 	}()
@@ -211,25 +209,29 @@ func (f *Flattener) copyFileSecure(ctx context.Context, src, dst string) error {
 	}()
 
 	if _, err = io.Copy(out, in); err != nil {
-		return fmt.Errorf("failed copying content from %s to %s: %w", src, dst, err)
+		return fmt.Errorf("failed copying content from %s to %s: %w", src, resolvedDst, err)
 	}
 
 	shouldCleanup = false
 	return nil
 }
 
-func (f *Flattener) resolveCollision(path string) string {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return path
-	}
-
+func (f *Flattener) createUnique(path string, mode os.FileMode) (*os.File, string, error) {
 	ext := Extension(path)
 	base := strings.TrimSuffix(path, ext)
 
+	candidate := path
 	for counter := 1; ; counter++ {
-		newPath := fmt.Sprintf("%s_%d%s", base, counter, ext)
-		if _, err := os.Stat(newPath); os.IsNotExist(err) {
-			return newPath
+		cleanCandidate := filepath.Clean(candidate)
+		out, err := os.OpenFile(cleanCandidate, os.O_CREATE|os.O_EXCL|os.O_WRONLY, mode)
+		if err == nil {
+			return out, cleanCandidate, nil
 		}
+
+		if !os.IsExist(err) {
+			return nil, "", fmt.Errorf("failed to create %s: %w", candidate, err)
+		}
+
+		candidate = fmt.Sprintf("%s_%d%s", base, counter, ext)
 	}
 }
