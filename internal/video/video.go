@@ -9,9 +9,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gabriel-vasile/mimetype"
 	"golang.org/x/sync/errgroup"
 
 	"ccmb/internal/config"
+	"ccmb/internal/media"
 )
 
 // Extractor is responsible for extracting frames from video files.
@@ -52,7 +54,7 @@ func (e *Extractor) Execute(ctx context.Context) error {
 		return fmt.Errorf("failed to read target directory: %w", err)
 	}
 
-	jobs := e.jobsToProcess(ctx, files)
+	jobs := e.filterFiles(files)
 	if len(jobs) == 0 {
 		return nil
 	}
@@ -62,10 +64,7 @@ func (e *Extractor) Execute(ctx context.Context) error {
 
 	for _, j := range jobs {
 		g.Go(func() error {
-			if err := e.processFile(ctx, j.name, j.path); err != nil {
-				return fmt.Errorf("error processing %s: %w", j.name, err)
-			}
-			return nil
+			return e.processJob(ctx, j)
 		})
 	}
 
@@ -76,7 +75,7 @@ func (e *Extractor) Execute(ctx context.Context) error {
 	return nil
 }
 
-func (e *Extractor) jobsToProcess(ctx context.Context, files []os.DirEntry) []job {
+func (e *Extractor) filterFiles(files []os.DirEntry) []job {
 	var jobs []job
 
 	for _, file := range files {
@@ -84,25 +83,63 @@ func (e *Extractor) jobsToProcess(ctx context.Context, files []os.DirEntry) []jo
 			continue
 		}
 
-		var shouldProcess bool
-		var path string
+		name := file.Name()
+		ext := strings.ToLower(filepath.Ext(name))
 
-		if e.VideoExtensions != nil {
-			ext := strings.ToLower(filepath.Ext(file.Name()))
-			if shouldProcess = e.VideoExtensions[ext]; shouldProcess {
-				path = filepath.Join(e.TargetDir, file.Name())
-			}
-		} else {
-			path = filepath.Join(e.TargetDir, file.Name())
-			shouldProcess = e.shouldProcess(ctx, path)
+		if e.VideoExtensions != nil && !e.VideoExtensions[ext] {
+			continue
 		}
 
-		if shouldProcess {
-			jobs = append(jobs, job{name: file.Name(), path: path})
-		}
+		jobs = append(jobs, job{
+			name: name,
+			path: filepath.Join(e.TargetDir, name),
+		})
 	}
 
 	return jobs
+}
+
+func (e *Extractor) processJob(ctx context.Context, j job) error {
+	shouldExtract, err := e.shouldExtract(ctx, j.path)
+	if err != nil {
+		return fmt.Errorf("error classifying %s: %w", j.name, err)
+	}
+
+	if !shouldExtract {
+		slog.Debug("Skipping non-video, single-frame file", "file", j.name)
+		return nil
+	}
+
+	if err := e.processFile(ctx, j.name, j.path); err != nil {
+		return fmt.Errorf("error processing %s: %w", j.name, err)
+	}
+
+	return nil
+}
+
+func (e *Extractor) shouldExtract(ctx context.Context, path string) (bool, error) {
+	mtype, err := mimetype.DetectFile(path)
+	if err != nil {
+		return false, fmt.Errorf("failed to detect content type: %w", err)
+	}
+
+	t := media.MainType(mtype.String())
+	if t == "video" {
+		return true, nil
+	}
+	if t != "image" {
+		return false, nil
+	}
+
+	frameCtx, cancel := context.WithTimeout(ctx, e.Timeout)
+	defer cancel()
+
+	frameType, err := media.ProbeFrameType(frameCtx, path)
+	if err != nil {
+		return false, fmt.Errorf("failed to probe frame type: %w", err)
+	}
+
+	return frameType == media.MultiFrameType, nil
 }
 
 func (e *Extractor) processFile(ctx context.Context, fileName, path string) error {

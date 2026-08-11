@@ -7,37 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-
-	"ccmb/internal/media"
 )
-
-func (e *Extractor) shouldProcess(ctx context.Context, path string) bool {
-	isVideo, err := e.checkIsVideo(ctx, path)
-	if err != nil {
-		return false
-	}
-
-	return isVideo
-}
-
-func (e *Extractor) checkIsVideo(ctx context.Context, path string) (bool, error) {
-	if e.VideoExtensions != nil {
-		if ext := strings.ToLower(filepath.Ext(path)); !e.VideoExtensions[ext] {
-			return false, nil
-		}
-		return true, nil
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, e.Timeout)
-	defer cancel()
-
-	frameCount, err := media.FrameCount(ctx, path)
-	if err != nil {
-		return false, fmt.Errorf("failed to check if file is a video: %w", err)
-	}
-
-	return frameCount > 1, nil
-}
 
 func (e *Extractor) extractFrames(ctx context.Context, path string) error {
 	baseName := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))

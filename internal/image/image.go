@@ -9,9 +9,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gabriel-vasile/mimetype"
 	"golang.org/x/sync/errgroup"
 
 	"ccmb/internal/config"
+	"ccmb/internal/media"
 )
 
 // Converter is responsible for converting image files.
@@ -52,7 +54,7 @@ func (c *Converter) Execute(ctx context.Context) error {
 		return fmt.Errorf("failed to read target directory: %w", err)
 	}
 
-	jobs := c.jobsToProcess(ctx, files)
+	jobs := c.filterFiles(files)
 	if len(jobs) == 0 {
 		return nil
 	}
@@ -62,10 +64,7 @@ func (c *Converter) Execute(ctx context.Context) error {
 
 	for _, j := range jobs {
 		g.Go(func() error {
-			if err := c.processFile(ctx, j.name, j.path); err != nil {
-				return fmt.Errorf("error converting %s: %w", j.name, err)
-			}
-			return nil
+			return c.processJob(ctx, j)
 		})
 	}
 
@@ -76,7 +75,7 @@ func (c *Converter) Execute(ctx context.Context) error {
 	return nil
 }
 
-func (c *Converter) jobsToProcess(ctx context.Context, files []os.DirEntry) []job {
+func (c *Converter) filterFiles(files []os.DirEntry) []job {
 	var jobs []job
 
 	for _, file := range files {
@@ -84,28 +83,62 @@ func (c *Converter) jobsToProcess(ctx context.Context, files []os.DirEntry) []jo
 			continue
 		}
 
-		path := filepath.Join(c.TargetDir, file.Name())
-		ext := strings.ToLower(filepath.Ext(file.Name()))
+		name := file.Name()
+		ext := strings.ToLower(filepath.Ext(name))
 
 		if c.SupportedImageExtensions[ext] {
 			continue
 		}
 
-		if c.shouldProcess(ctx, path) {
-			jobs = append(jobs, job{name: file.Name(), path: path})
+		if c.ImageExtensions != nil && !c.ImageExtensions[ext] {
+			continue
 		}
+
+		jobs = append(jobs, job{
+			name: name,
+			path: filepath.Join(c.TargetDir, name),
+		})
 	}
 
 	return jobs
 }
 
-func (c *Converter) shouldProcess(ctx context.Context, path string) bool {
-	isImage, err := c.checkIsImage(ctx, path)
+func (c *Converter) processJob(ctx context.Context, j job) error {
+	isSingleFrameImage, err := c.isSingleFrameImage(ctx, j.path)
 	if err != nil {
-		return false
+		return fmt.Errorf("error classifying %s: %w", j.name, err)
 	}
 
-	return isImage
+	if !isSingleFrameImage {
+		return nil
+	}
+
+	if err := c.processFile(ctx, j.name, j.path); err != nil {
+		return fmt.Errorf("error converting %s: %w", j.name, err)
+	}
+
+	return nil
+}
+
+func (c *Converter) isSingleFrameImage(ctx context.Context, path string) (bool, error) {
+	mtype, err := mimetype.DetectFile(path)
+	if err != nil {
+		return false, fmt.Errorf("failed to detect content type: %w", err)
+	}
+
+	if media.MainType(mtype.String()) != "image" {
+		return false, nil
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, c.Timeout)
+	defer cancel()
+
+	frameType, err := media.ProbeFrameType(ctx, path)
+	if err != nil {
+		return false, fmt.Errorf("failed to check if single-frame media file: %w", err)
+	}
+
+	return frameType == media.SingleFrameType, nil
 }
 
 func (c *Converter) processFile(ctx context.Context, fileName, path string) error {

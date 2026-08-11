@@ -25,6 +25,7 @@ linters:
           allow:
             - $gostd
             - ccmb
+            - github.com/gabriel-vasile/mimetype
             - github.com/go-viper/mapstructure/v2
             - github.com/klauspost/compress/gzip
             - github.com/klauspost/compress/zip

@@ -7,28 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-
-	"ccmb/internal/media"
 )
-
-func (c *Converter) checkIsImage(ctx context.Context, path string) (bool, error) {
-	if c.ImageExtensions != nil {
-		if ext := strings.ToLower(filepath.Ext(path)); !c.ImageExtensions[ext] {
-			return false, nil
-		}
-		return true, nil
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, c.Timeout)
-	defer cancel()
-
-	frameCount, err := media.FrameCount(ctx, path)
-	if err != nil {
-		return false, fmt.Errorf("failed to check if file is an image: %w", err)
-	}
-
-	return frameCount == 1, nil
-}
 
 func (c *Converter) convert(ctx context.Context, name, path string) error {
 	baseName := strings.TrimSuffix(name, filepath.Ext(name))
@@ -47,8 +26,8 @@ func (c *Converter) convert(ctx context.Context, name, path string) error {
 		"-hwaccel", "auto",
 		// Input file.
 		"-i", path,
-		// Use high quality.
-		"-q:v", "2",
+		// Use PNG codec.
+		"-c:v", "png",
 		// Use all available threads.
 		"-threads", "0",
 		// Overwrite output file if it exists.
