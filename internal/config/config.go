@@ -33,6 +33,7 @@ type Config struct {
 	MaxVideoWorkers        int           `mapstructure:"max_video_workers"`
 	ImageConversionTimeout time.Duration `mapstructure:"image_conversion_timeout"`
 	VideoExtractTimeout    time.Duration `mapstructure:"video_extract_timeout"`
+	SvgCanvasResolution    float64       `mapstructure:"svg_canvas_resolution"`
 
 	EstFileCount      int    `mapstructure:"est_file_count"`
 	FlatPathDelimiter string `mapstructure:"flat_path_delimiter"`
@@ -71,6 +72,7 @@ const (
 	defaultMaxVideoWorkers        = 4
 	defaultImageConversionTimeout = 15 * time.Second
 	defaultVideoExtractTimeout    = 1 * time.Minute
+	defaultSvgCanvasResolution    = 300 / 25.4
 
 	defaultEstFileCount      = 128
 	defaultFlatPathDelimiter = "--"
@@ -111,6 +113,7 @@ func NewViper() *viper.Viper {
 	v.SetDefault("max_video_workers", defaultMaxVideoWorkers)
 	v.SetDefault("image_conversion_timeout", defaultImageConversionTimeout)
 	v.SetDefault("video_extract_timeout", defaultVideoExtractTimeout)
+	v.SetDefault("svg_canvas_resolution", defaultSvgCanvasResolution)
 
 	v.SetDefault("est_file_count", defaultEstFileCount)
 	v.SetDefault("flat_path_delimiter", defaultFlatPathDelimiter)

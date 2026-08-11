@@ -20,8 +20,9 @@ import (
 type Converter struct {
 	TargetDir string
 
-	MaxWorkers int
-	Timeout    time.Duration
+	MaxWorkers          int
+	Timeout             time.Duration
+	SvgCanvasResolution float64
 
 	ImageExtensions          map[string]bool
 	SupportedImageExtensions map[string]bool
@@ -37,8 +38,9 @@ func NewConverter(cfg *config.Config) *Converter {
 	return &Converter{
 		TargetDir: cfg.TargetDir,
 
-		MaxWorkers: cfg.MaxImageWorkers,
-		Timeout:    cfg.ImageConversionTimeout,
+		MaxWorkers:          cfg.MaxImageWorkers,
+		Timeout:             cfg.ImageConversionTimeout,
+		SvgCanvasResolution: cfg.SvgCanvasResolution,
 
 		ImageExtensions:          cfg.ImageExtensions,
 		SupportedImageExtensions: cfg.SupportedImageExtensions,
@@ -94,6 +96,10 @@ func (c *Converter) filterFiles(files []os.DirEntry) []job {
 			continue
 		}
 
+		if c.ImageExtensions == nil && ext == ".gif" {
+			continue
+		}
+
 		jobs = append(jobs, job{
 			name: name,
 			path: filepath.Join(c.TargetDir, name),
@@ -104,7 +110,13 @@ func (c *Converter) filterFiles(files []os.DirEntry) []job {
 }
 
 func (c *Converter) processJob(ctx context.Context, j job) error {
-	isSingleFrameImage, err := c.isSingleFrameImage(ctx, j.path)
+	mtype, err := mimetype.DetectFile(j.path)
+	if err != nil {
+		return fmt.Errorf("failed to detect content type: %w", err)
+	}
+	mimeType := mtype.String()
+
+	isSingleFrameImage, err := c.isSingleFrameImage(ctx, j.path, mimeType)
 	if err != nil {
 		return fmt.Errorf("error classifying %s: %w", j.name, err)
 	}
@@ -113,20 +125,23 @@ func (c *Converter) processJob(ctx context.Context, j job) error {
 		return nil
 	}
 
-	if err := c.processFile(ctx, j.name, j.path); err != nil {
+	if err := c.processFile(ctx, j.name, j.path, mimeType); err != nil {
 		return fmt.Errorf("error converting %s: %w", j.name, err)
 	}
 
 	return nil
 }
 
-func (c *Converter) isSingleFrameImage(ctx context.Context, path string) (bool, error) {
-	mtype, err := mimetype.DetectFile(path)
-	if err != nil {
-		return false, fmt.Errorf("failed to detect content type: %w", err)
+func (c *Converter) isSingleFrameImage(ctx context.Context, path, mimeType string) (bool, error) {
+	if media.MainType(mimeType) != "image" {
+		return false, nil
 	}
 
-	if media.MainType(mtype.String()) != "image" {
+	if strings.HasPrefix(mimeType, "image/svg") {
+		return true, nil
+	}
+
+	if strings.HasPrefix(mimeType, "image/gif") {
 		return false, nil
 	}
 
@@ -141,8 +156,8 @@ func (c *Converter) isSingleFrameImage(ctx context.Context, path string) (bool, 
 	return frameType == media.SingleFrameType, nil
 }
 
-func (c *Converter) processFile(ctx context.Context, fileName, path string) error {
-	if err := c.convert(ctx, fileName, path); err != nil {
+func (c *Converter) processFile(ctx context.Context, name, path, mimeType string) error {
+	if err := c.convert(ctx, name, path, mimeType); err != nil {
 		return fmt.Errorf("failed to convert image: %w", err)
 	}
 

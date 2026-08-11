@@ -142,13 +142,13 @@ func (e *Extractor) shouldExtract(ctx context.Context, path string) (bool, error
 	return frameType == media.MultiFrameType, nil
 }
 
-func (e *Extractor) processFile(ctx context.Context, fileName, path string) error {
+func (e *Extractor) processFile(ctx context.Context, name, path string) error {
 	if err := e.extractFrames(ctx, path); err != nil {
 		return fmt.Errorf("failed to extract frames: %w", err)
 	}
 
 	if err := os.Remove(path); err != nil {
-		return fmt.Errorf("failed to delete video file %s: %w", fileName, err)
+		return fmt.Errorf("failed to delete video file %s: %w", name, err)
 	}
 
 	return nil

@@ -9,11 +9,16 @@ import (
 	"strings"
 )
 
-func (c *Converter) convert(ctx context.Context, name, path string) error {
-	baseName := strings.TrimSuffix(name, filepath.Ext(name))
+func (c *Converter) convert(ctx context.Context, name, path, mimeType string) error {
+	ext := filepath.Ext(name)
+	baseName := strings.TrimSuffix(name, ext)
 	outputPath := filepath.Join(c.TargetDir, baseName+".png")
 
 	slog.Debug("Converting unsupported image to PNG", "file", name)
+
+	if strings.HasPrefix(mimeType, "image/svg") {
+		return c.convertSVGToPNG(path, outputPath)
+	}
 
 	ctx, cancel := context.WithTimeout(ctx, c.Timeout)
 	defer cancel()

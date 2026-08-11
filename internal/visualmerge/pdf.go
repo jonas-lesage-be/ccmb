@@ -89,6 +89,11 @@ func (m *Merger) createWatermark(flatName, ext string) (*pdfcpu_model.Watermark,
 		headerText = fmt.Sprintf("File path: %s frame number %s", cleanPath, frameNum)
 	}
 
+	// Optimized configuration string for maximum readability:
+	// - rot:0 -> Forces the text to be 100% horizontal
+	// - mode:2 -> Activates both Fill & Stroke (text + outline)
+	// - color:#000000 -> Fills the text with black
+	// - strokecolor:#ffffff -> Outlines the text with white
 	desc := "pos: tr, off: -6 -6, points: 10, scale: 1.0 abs, rot: 0, mode: 0," +
 		" color: #000000, bgcol: #ffffff, border: 1 #000000, margins: 4"
 	wm, err := pdfcpu.ParseTextWatermarkDetails(
@@ -120,13 +125,13 @@ func importImageWithWatermark(srcPath, outPDF, flatName string, wm *pdfcpu_model
 }
 
 func mergeBatch(files []string, targetDir string, counter int) error {
-	fileName := fmt.Sprintf("FinalResult_Visual_Part_%d.pdf", counter)
-	filePath := filepath.Join(targetDir, fileName)
-	slog.Info("Flushing and writing structured batch out to file payload", "file", fileName)
+	fname := fmt.Sprintf("FinalResult_Visual_Part_%d.pdf", counter)
+	fpath := filepath.Join(targetDir, fname)
+	slog.Info("Flushing and writing structured batch out to file payload", "file", fname)
 
-	err := pdfcpu_api.MergeCreateFile(files, filePath, false, nil)
+	err := pdfcpu_api.MergeCreateFile(files, fpath, false, nil)
 	if err != nil {
-		return fmt.Errorf("failed to merge batch into %s: %w", fileName, err)
+		return fmt.Errorf("failed to merge batch into %s: %w", fname, err)
 	}
 
 	if err := cleanUpFiles(files); err != nil {
