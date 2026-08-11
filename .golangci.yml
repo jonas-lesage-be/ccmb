@@ -9,6 +9,7 @@ linters:
     - nlreturn # Requires explicit return statements at the end of functions.
     - noinlineerr # Requires that errors are not inlined in return statements.
     - tagliatelle # Requires that struct tags are aligned and formatted consistently.
+    - testpackage # Requires that test files are in a separate package from the code being tested.
     - varnamelen # Requires variable names to be at least 3 characters long.
     - wsl # Requires whitespace around operators.
     - wsl_v5 # Requires whitespace around operators.
@@ -36,6 +37,7 @@ linters:
             - github.com/spf13/cobra
             - github.com/spf13/pflag
             - github.com/spf13/viper
+            - github.com/stretchr/testify/assert
             - github.com/tdewolff/canvas
             - github.com/tdewolff/canvas/renderers
             - golang.org/x/sync/errgroup

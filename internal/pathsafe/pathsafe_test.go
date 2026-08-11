@@ -1,10 +1,10 @@
-package pathsafe_test
+package pathsafe
 
 import (
 	"path/filepath"
 	"testing"
 
-	"ccmb/internal/pathsafe"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestContains(t *testing.T) {
@@ -64,10 +64,11 @@ func TestContains(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			// Act & Assert
-			if got := pathsafe.Contains(base, tt.target); got != tt.want {
-				t.Errorf("Contains(%q, %q) = %v, want %v", base, tt.target, got, tt.want)
-			}
+			// Act
+			got := Contains(base, tt.target)
+
+			// Assert
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
