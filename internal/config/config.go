@@ -1,24 +1,12 @@
 package config
 
 import (
-	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"time"
 
-	"github.com/go-viper/mapstructure/v2"
-	"github.com/spf13/viper"
-
 	"ccmb/internal/conv"
-)
-
-var (
-	errInvalidBoolMapType = errors.New("expected string for bool map")
-	errSourceDirRequired  = errors.New("source-dir is required")
-	errTargetDirRequired  = errors.New("target-dir is required")
 )
 
 // Config holds the configuration settings for the application.
@@ -96,124 +84,6 @@ const (
 	defaultSkipVisualMerger   = false
 	defaultSkipTextMerger     = false
 )
-
-// NewViper returns a Viper instance configured with the application defaults.
-func NewViper() *viper.Viper {
-	v := viper.New()
-	v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
-	v.AutomaticEnv()
-
-	v.SetDefault("source_dir", defaultSourceDir)
-	v.SetDefault("target_dir", defaultTargetDir)
-	v.SetDefault("target_dir_permissions", defaultTargetDirPermissions)
-	v.SetDefault("text_file_permissions", defaultTextFilePermissions)
-
-	v.SetDefault("max_flattener_workers", defaultMaxFlattenerWorkers)
-	v.SetDefault("max_image_workers", defaultMaxImageWorkers)
-	v.SetDefault("max_video_workers", defaultMaxVideoWorkers)
-	v.SetDefault("image_conversion_timeout", defaultImageConversionTimeout)
-	v.SetDefault("video_extract_timeout", defaultVideoExtractTimeout)
-	v.SetDefault("svg_canvas_resolution", defaultSvgCanvasResolution)
-
-	v.SetDefault("est_file_count", defaultEstFileCount)
-	v.SetDefault("flat_path_delimiter", defaultFlatPathDelimiter)
-	v.SetDefault("escaped_delimiter", defaultFlatPathDelimiter+defaultFlatPathDelimiter)
-	v.SetDefault("decode_placeholder", defaultDecodePlaceholder)
-
-	v.SetDefault("max_archive_file_bytes", defaultMaxArchiveFileBytes)
-	v.SetDefault("max_pdf_file_bytes", defaultMaxPDFFileBytes)
-	v.SetDefault("max_text_file_bytes", defaultMaxTextFileBytes)
-
-	v.SetDefault("filter_extensions", parseBoolMap(defaultFilterExtensions))
-	v.SetDefault("image_extensions", parseBoolMap(defaultImageExtensions))
-	v.SetDefault("supported_image_extensions", parseBoolMap(defaultSupportedImageExtensions))
-	v.SetDefault("video_extensions", parseBoolMap(defaultVideoExtensions))
-	v.SetDefault("visual_extensions", parseBoolMap(defaultVisualExtensions))
-
-	v.SetDefault("verbose", defaultVerbose)
-	v.SetDefault("skip_flattener", defaultSkipFlattener)
-	v.SetDefault("skip_filter", defaultSkipFilter)
-	v.SetDefault("skip_image_converter", defaultSkipImageConverter)
-	v.SetDefault("skip_video_extractor", defaultSkipVideoExtractor)
-	v.SetDefault("skip_visual_merger", defaultSkipVisualMerger)
-	v.SetDefault("skip_text_merger", defaultSkipTextMerger)
-
-	return v
-}
-
-// Load reads an optional config JSON, TOML, or YAML file.
-// Flags and environment variables take precedence over file values.
-func Load(v *viper.Viper, configFile string) (*Config, error) {
-	if configFile != "" {
-		v.SetConfigFile(configFile)
-
-		if err := v.ReadInConfig(); err != nil {
-			return nil, fmt.Errorf("read config file %q: %w", configFile, err)
-		}
-	}
-
-	var cfg Config
-	if err := v.Unmarshal(
-		&cfg,
-		viper.DecodeHook(mapstructure.ComposeDecodeHookFunc(
-			mapstructure.StringToTimeDurationHookFunc(),
-			stringToBoolMapHook(),
-		)),
-	); err != nil {
-		return nil, fmt.Errorf("decode configuration: %w", err)
-	}
-
-	cfg.SkipTARFlattenerExplicit = v.IsSet("skip_tar_flattener")
-	if !cfg.SkipTARFlattenerExplicit {
-		cfg.SkipTARFlattener = isWindows
-	}
-
-	if cfg.SourceDir == "" {
-		return nil, fmt.Errorf(
-			"%w: must be set via flag, env, or config file",
-			errSourceDirRequired,
-		)
-	}
-	if cfg.TargetDir == "" {
-		return nil, fmt.Errorf(
-			"%w: must be set via flag, env, or config file",
-			errTargetDirRequired,
-		)
-	}
-
-	return &cfg, nil
-}
-
-func parseBoolMap(value string) map[string]bool {
-	if value == "nil" {
-		return nil
-	}
-
-	set := make(map[string]bool)
-	for entry := range strings.SplitSeq(value, ",") {
-		if entry = strings.TrimSpace(entry); entry != "" {
-			set[entry] = true
-		}
-	}
-
-	return set
-}
-
-func stringToBoolMapHook() mapstructure.DecodeHookFuncType {
-	target := reflect.TypeFor[map[string]bool]()
-
-	return func(from, to reflect.Type, data any) (any, error) {
-		if from.Kind() == reflect.String && to == target {
-			str, ok := data.(string)
-			if !ok {
-				return nil, fmt.Errorf("%w: got %T", errInvalidBoolMapType, data)
-			}
-			return parseBoolMap(str), nil
-		}
-
-		return data, nil
-	}
-}
 
 // ShouldIgnore determines if a directory component contains macOS junk files.
 func ShouldIgnore(pathStr string) bool {

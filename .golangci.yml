@@ -20,6 +20,9 @@ linters:
       statements: 50
       ignore-comments: true
 
+    exhaustive:
+      default-signifies-exhaustive: true
+
     depguard:
       rules:
         main:
@@ -38,6 +41,7 @@ linters:
             - github.com/spf13/pflag
             - github.com/spf13/viper
             - github.com/stretchr/testify/assert
+            - github.com/stretchr/testify/require
             - github.com/tdewolff/canvas
             - github.com/tdewolff/canvas/renderers
             - golang.org/x/sync/errgroup

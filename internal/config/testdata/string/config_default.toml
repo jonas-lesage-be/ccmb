@@ -1,0 +1,32 @@
+source_dir = "."
+target_dir = "./_ccmb_output"
+target_dir_permissions = 0o700
+text_file_permissions = 0o600
+
+max_flattener_workers = 8
+max_image_workers = 8
+max_video_workers = 4
+image_conversion_timeout = "15s"
+video_extract_timeout = "1m"
+svg_canvas_resolution = 11.811023622047244
+
+est_file_count = 128
+flat_path_delimiter = "--"
+escaped_delimiter = "----"
+decode_placeholder = "\u0000"
+
+max_archive_file_bytes = 4294967296
+max_pdf_file_bytes = 50331648
+max_text_file_bytes = 2097152
+
+supported_image_extensions = ".jpg, .jpeg, .png, .webp, .tif, .tiff"
+visual_extensions = ".pdf, .jpg, .jpeg, .png, .webp, .tif, .tiff"
+
+verbose = false
+skip_flattener = false
+skip_tar_flattener = true
+skip_filter = true
+skip_image_converter = false
+skip_video_extractor = false
+skip_visual_merger = false
+skip_text_merger = false
