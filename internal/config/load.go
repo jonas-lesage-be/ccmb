@@ -84,7 +84,7 @@ func Load(v *viper.Viper, configFile string) (*Config, error) {
 
 	cfg.SkipTARFlattenerExplicit = v.IsSet("skip_tar_flattener")
 	if !cfg.SkipTARFlattenerExplicit {
-		cfg.SkipTARFlattener = isWindows
+		cfg.SkipTARFlattener = IsWindows
 	}
 
 	if cfg.SourceDir == "" {

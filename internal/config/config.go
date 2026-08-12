@@ -77,7 +77,7 @@ const (
 
 	defaultVerbose            = false
 	defaultSkipFlattener      = false
-	defaultSkipTARFlattener   = isWindows
+	defaultSkipTARFlattener   = IsWindows
 	defaultSkipFilter         = true
 	defaultSkipImageConverter = false
 	defaultSkipVideoExtractor = false

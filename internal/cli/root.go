@@ -1,4 +1,3 @@
-// Package cli provides the command-line interface for ccmb.
 package cli
 
 import (
@@ -40,8 +39,7 @@ ccmb -s /path/to/source -t /path/to/target
 }
 
 // NewRootCommand creates the ccmb command.
-func NewRootCommand(ctx context.Context) *cobra.Command {
-	v := config.NewViper()
+func NewRootCommand(ctx context.Context, v *viper.Viper) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "ccmb",
 		Short:   "Context Combiner: flatten, filter, convert, and merge files.",
@@ -143,13 +141,12 @@ func bindFlags(cmd *cobra.Command, v *viper.Viper) error {
 			return
 		}
 
-		key := strings.ReplaceAll(flag.Name, "-", "_")
-
 		if err := v.BindPFlag(flag.Name, flag); err != nil {
 			bindErr = fmt.Errorf("failed to bind flag %s: %w", flag.Name, err)
 			return
 		}
 
+		key := strings.ReplaceAll(flag.Name, "-", "_")
 		if key != flag.Name {
 			v.RegisterAlias(key, flag.Name)
 		}
