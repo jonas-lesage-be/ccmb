@@ -131,10 +131,7 @@ func (e *Extractor) shouldExtract(ctx context.Context, path string) (bool, error
 		return false, nil
 	}
 
-	frameCtx, cancel := context.WithTimeout(ctx, e.Timeout)
-	defer cancel()
-
-	frameType, err := media.ProbeFrameType(frameCtx, path)
+	frameType, err := media.ProbeFrameType(ctx, path, e.Timeout)
 	if err != nil {
 		return false, fmt.Errorf("failed to probe frame type: %w", err)
 	}

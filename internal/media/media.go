@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // FrameType represents the type of media file based on the number of frames it contains.
@@ -34,7 +35,10 @@ func MainType(mtype string) string {
 // ProbeFrameType uses ffprobe to determine the frame type of the media file at path.
 // It only decodes the first two frames (via -read_intervals),
 // which is enough to determine the answer without a full decode.
-func ProbeFrameType(ctx context.Context, path string) (FrameType, error) {
+func ProbeFrameType(ctx context.Context, path string, timeout time.Duration) (FrameType, error) {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	//nolint:gosec
 	cmd := exec.CommandContext(
 		ctx,

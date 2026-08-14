@@ -145,10 +145,7 @@ func (c *Converter) isSingleFrameImage(ctx context.Context, path, mimeType strin
 		return false, nil
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, c.Timeout)
-	defer cancel()
-
-	frameType, err := media.ProbeFrameType(ctx, path)
+	frameType, err := media.ProbeFrameType(ctx, path, c.Timeout)
 	if err != nil {
 		return false, fmt.Errorf("failed to check if single-frame media file: %w", err)
 	}
