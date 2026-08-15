@@ -44,6 +44,7 @@ func NewViper() *viper.Viper {
 	v.SetDefault("max_text_file_bytes", defaultMaxTextFileBytes)
 
 	v.SetDefault("filter_extensions", parseBoolMap(defaultFilterExtensions))
+	v.SetDefault("document_extensions", parseBoolMap(defaultDocumentExtensions))
 	v.SetDefault("image_extensions", parseBoolMap(defaultImageExtensions))
 	v.SetDefault("supported_image_extensions", parseBoolMap(defaultSupportedImageExtensions))
 	v.SetDefault("video_extensions", parseBoolMap(defaultVideoExtensions))
@@ -52,6 +53,7 @@ func NewViper() *viper.Viper {
 	v.SetDefault("verbose", defaultVerbose)
 	v.SetDefault("skip_flattener", defaultSkipFlattener)
 	v.SetDefault("skip_filter", defaultSkipFilter)
+	v.SetDefault("skip_document_converter", defaultSkipDocumentConverter)
 	v.SetDefault("skip_image_converter", defaultSkipImageConverter)
 	v.SetDefault("skip_video_extractor", defaultSkipVideoExtractor)
 	v.SetDefault("skip_visual_merger", defaultSkipVisualMerger)

@@ -10,9 +10,13 @@ import (
 )
 
 func (c *Converter) convert(ctx context.Context, name, path, mimeType string) error {
+	if _, err := exec.LookPath("ffmpeg"); err != nil {
+		return fmt.Errorf("ffmpeg is not installed or not found in PATH: %w", err)
+	}
+
 	ext := filepath.Ext(name)
 	baseName := strings.TrimSuffix(name, ext)
-	outputPath := filepath.Join(c.TargetDir, baseName+".png")
+	outputPath := filepath.Join(c.Dir, baseName+".png")
 
 	slog.Debug("Converting unsupported image to PNG", "file", name)
 

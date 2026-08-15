@@ -19,6 +19,7 @@ max_archive_file_bytes = 4294967296
 max_pdf_file_bytes = 50331648
 max_text_file_bytes = 2097152
 
+document_extensions = ".doc, .docx, .docm, .odt, .epub, .rtf"
 supported_image_extensions = ".jpg, .jpeg, .png, .webp, .tif, .tiff"
 visual_extensions = ".pdf, .jpg, .jpeg, .png, .webp, .tif, .tiff"
 

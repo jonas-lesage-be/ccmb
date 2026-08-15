@@ -23,6 +23,14 @@ filter_extensions: ~
 image_extensions: ~
 video_extensions: ~
 
+document_extensions:
+  - ".doc"
+  - ".docx"
+  - ".docm"
+  - ".odt"
+  - ".epub"
+  - ".rtf"
+
 supported_image_extensions:
   - ".jpg"
   - ".jpeg"

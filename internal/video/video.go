@@ -18,7 +18,7 @@ import (
 
 // Extractor is responsible for extracting frames from video files.
 type Extractor struct {
-	TargetDir string
+	Dir string
 
 	MaxWorkers int
 	Timeout    time.Duration
@@ -35,7 +35,7 @@ type job struct {
 // NewExtractor creates a new instance of Extractor using the application configuration.
 func NewExtractor(cfg *config.Config) *Extractor {
 	return &Extractor{
-		TargetDir: cfg.TargetDir,
+		Dir: cfg.TargetDir,
 
 		MaxWorkers: cfg.MaxVideoWorkers,
 		Timeout:    cfg.VideoExtractTimeout,
@@ -49,7 +49,7 @@ func NewExtractor(cfg *config.Config) *Extractor {
 func (e *Extractor) Execute(ctx context.Context) error {
 	slog.Debug("Extracting frames out of videos")
 
-	files, err := os.ReadDir(e.TargetDir)
+	files, err := os.ReadDir(e.Dir)
 	if err != nil {
 		return fmt.Errorf("failed to read target directory: %w", err)
 	}
@@ -92,7 +92,7 @@ func (e *Extractor) filterFiles(files []os.DirEntry) []job {
 
 		jobs = append(jobs, job{
 			name: name,
-			path: filepath.Join(e.TargetDir, name),
+			path: filepath.Join(e.Dir, name),
 		})
 	}
 

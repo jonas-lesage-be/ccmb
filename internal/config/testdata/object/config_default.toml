@@ -28,6 +28,14 @@ skip_video_extractor = false
 skip_visual_merger = false
 skip_text_merger = false
 
+[document_extensions]
+".doc" = true
+".docx" = true
+".docm" = true
+".odt" = true
+".epub" = true
+".rtf" = true
+
 [supported_image_extensions]
 ".jpg" = true
 ".jpeg" = true

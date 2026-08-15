@@ -21,6 +21,7 @@
   "max_text_file_bytes": 2097152,
 
   "filter_extensions": null,
+  "document_extensions": [".doc", ".docx", ".docm", ".odt", ".epub", ".rtf"],
   "image_extensions": null,
   "supported_image_extensions": [".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff"],
   "video_extensions": null,

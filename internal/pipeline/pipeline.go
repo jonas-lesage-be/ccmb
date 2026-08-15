@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"ccmb/internal/config"
+	"ccmb/internal/document"
 	"ccmb/internal/filter"
 	"ccmb/internal/flattener"
 	"ccmb/internal/image"
@@ -20,6 +21,7 @@ type pipelineStep int
 const (
 	flattenerStep pipelineStep = iota
 	filterStep
+	documentConverterStep
 	imageConverterStep
 	videoExtractorStep
 	visualMergerStep
@@ -32,6 +34,8 @@ func (p pipelineStep) String() string {
 		return "Flattener"
 	case filterStep:
 		return "Filter"
+	case documentConverterStep:
+		return "Document converter"
 	case imageConverterStep:
 		return "Image converter"
 	case videoExtractorStep:
@@ -51,6 +55,8 @@ func (p pipelineStep) ShouldSkip(cfg *config.Config) bool {
 		return cfg.SkipFlattener
 	case filterStep:
 		return cfg.SkipFilter
+	case documentConverterStep:
+		return cfg.SkipDocumentConverter
 	case imageConverterStep:
 		return cfg.SkipImageConverter
 	case videoExtractorStep:
@@ -75,6 +81,11 @@ func (p pipelineStep) Func(cfg *config.Config) func(context.Context) error {
 		return func(_ context.Context) error {
 			f := filter.NewFilter(cfg)
 			return f.Execute()
+		}
+	case documentConverterStep:
+		return func(ctx context.Context) error {
+			c := document.NewConverter(cfg)
+			return c.Execute(ctx)
 		}
 	case imageConverterStep:
 		return func(ctx context.Context) error {
@@ -114,6 +125,7 @@ func NewPipeline(cfg *config.Config) *Pipeline {
 		steps: []pipelineStep{
 			flattenerStep,
 			filterStep,
+			documentConverterStep,
 			imageConverterStep,
 			videoExtractorStep,
 			visualMergerStep,

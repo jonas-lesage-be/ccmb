@@ -36,6 +36,13 @@ func MainType(mtype string) string {
 // It only decodes the first two frames (via -read_intervals),
 // which is enough to determine the answer without a full decode.
 func ProbeFrameType(ctx context.Context, path string, timeout time.Duration) (FrameType, error) {
+	if _, err := exec.LookPath("ffprobe"); err != nil {
+		return UnknownFrameType, fmt.Errorf(
+			"ffprobe is not installed or not found in PATH: %w",
+			err,
+		)
+	}
+
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 

@@ -18,7 +18,7 @@ import (
 
 // Converter is responsible for converting image files.
 type Converter struct {
-	TargetDir string
+	Dir string
 
 	MaxWorkers          int
 	Timeout             time.Duration
@@ -36,7 +36,7 @@ type job struct {
 // NewConverter creates a new instance of Converter using the application configuration.
 func NewConverter(cfg *config.Config) *Converter {
 	return &Converter{
-		TargetDir: cfg.TargetDir,
+		Dir: cfg.TargetDir,
 
 		MaxWorkers:          cfg.MaxImageWorkers,
 		Timeout:             cfg.ImageConversionTimeout,
@@ -51,7 +51,7 @@ func NewConverter(cfg *config.Config) *Converter {
 func (c *Converter) Execute(ctx context.Context) error {
 	slog.Debug("Converting unsupported image files")
 
-	files, err := os.ReadDir(c.TargetDir)
+	files, err := os.ReadDir(c.Dir)
 	if err != nil {
 		return fmt.Errorf("failed to read target directory: %w", err)
 	}
@@ -102,7 +102,7 @@ func (c *Converter) filterFiles(files []os.DirEntry) []job {
 
 		jobs = append(jobs, job{
 			name: name,
-			path: filepath.Join(c.TargetDir, name),
+			path: filepath.Join(c.Dir, name),
 		})
 	}
 

@@ -23,6 +23,14 @@ filter_extensions: ~
 image_extensions: ~
 video_extensions: ~
 
+document_extensions:
+  ".doc": true
+  ".docx": true
+  ".docm": true
+  ".odt": true
+  ".epub": true
+  ".rtf": true
+
 supported_image_extensions:
   ".jpg": true
   ".jpeg": true

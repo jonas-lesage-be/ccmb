@@ -12,14 +12,14 @@ import (
 
 // Filter is responsible for filtering out files with unsupported extensions.
 type Filter struct {
-	TargetDir        string
+	Dir              string
 	FilterExtensions map[string]bool
 }
 
 // NewFilter creates a new instance of Filter using the application configuration.
 func NewFilter(cfg *config.Config) *Filter {
 	return &Filter{
-		TargetDir:        cfg.TargetDir,
+		Dir:              cfg.TargetDir,
 		FilterExtensions: cfg.FilterExtensions,
 	}
 }
@@ -28,9 +28,9 @@ func NewFilter(cfg *config.Config) *Filter {
 func (f *Filter) Execute() error {
 	slog.Debug("Removing files with an unsupported extension")
 
-	files, err := os.ReadDir(f.TargetDir)
+	files, err := os.ReadDir(f.Dir)
 	if err != nil {
-		return fmt.Errorf("failed to read target directory %s: %w", f.TargetDir, err)
+		return fmt.Errorf("failed to read target directory %s: %w", f.Dir, err)
 	}
 
 	for _, file := range files {
@@ -39,7 +39,7 @@ func (f *Filter) Execute() error {
 		}
 
 		if ext := flattener.Extension(file.Name()); f.FilterExtensions[ext] {
-			path := filepath.Join(f.TargetDir, file.Name())
+			path := filepath.Join(f.Dir, file.Name())
 			if err := os.Remove(path); err != nil {
 				slog.Error("Failed to delete file", "name", file.Name(), "err", err)
 			} else {

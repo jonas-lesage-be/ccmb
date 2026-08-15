@@ -82,6 +82,18 @@ func TestLoad_WithConfigFiles(t *testing.T) {
 				assert.True(t, cfg.FilterExtensions[ext])
 			}
 
+			expectedDocumentExtensions := []string{
+				".doc",
+				".docx",
+				".docm",
+				".odt",
+				".epub",
+				".rtf",
+			}
+			for _, ext := range expectedDocumentExtensions {
+				assert.True(t, cfg.DocumentExtensions[ext])
+			}
+
 			expectedExtensions := []string{".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff"}
 			for _, ext := range expectedExtensions {
 				assert.True(t, cfg.SupportedImageExtensions[ext])
@@ -137,6 +149,7 @@ func TestLoad_UsesOverrides(t *testing.T) {
 	v.Set("skip_flattener", !defaultSkipFlattener)
 	v.Set("skip_tar_flattener", !defaultSkipTARFlattener)
 	v.Set("skip_filter", !defaultSkipFilter)
+	v.Set("skip_document_converter", !defaultSkipDocumentConverter)
 	v.Set("skip_image_converter", !defaultSkipImageConverter)
 	v.Set("skip_video_extractor", !defaultSkipVideoExtractor)
 	v.Set("skip_visual_merger", !defaultSkipVisualMerger)
@@ -181,6 +194,7 @@ func TestLoad_UsesOverrides(t *testing.T) {
 	assert.Equal(t, !defaultSkipFlattener, cfg.SkipFlattener)
 	assert.Equal(t, !defaultSkipTARFlattener, cfg.SkipTARFlattener)
 	assert.Equal(t, !defaultSkipFilter, cfg.SkipFilter)
+	assert.Equal(t, !defaultSkipDocumentConverter, cfg.SkipDocumentConverter)
 	assert.Equal(t, !defaultSkipImageConverter, cfg.SkipImageConverter)
 	assert.Equal(t, !defaultSkipVideoExtractor, cfg.SkipVideoExtractor)
 	assert.Equal(t, !defaultSkipVisualMerger, cfg.SkipVisualMerger)

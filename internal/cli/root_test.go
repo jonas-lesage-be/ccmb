@@ -125,6 +125,7 @@ func TestNewRootCommand_FlagsOverrideDefaults(t *testing.T) {
 		"--max-text-file-bytes", "1048576", // 1 * conv.MiB
 
 		"--filter-extensions", "val1,val2",
+		"--document-extensions", "doc1,doc2",
 		"--image-extensions", "img1,img2",
 		"--supported-image-extensions", "s1,s2",
 		"--video-extensions", "v1,v2",
@@ -134,6 +135,7 @@ func TestNewRootCommand_FlagsOverrideDefaults(t *testing.T) {
 		"--skip-flattener=true",
 		"--skip-tar-flattener=false",
 		"--skip-filter=false",
+		"--skip-document-converter=true",
 		"--skip-image-converter=true",
 		"--skip-video-extractor=true",
 		"--skip-visual-merger=true",
@@ -173,6 +175,8 @@ func TestNewRootCommand_FlagsOverrideDefaults(t *testing.T) {
 
 	assert.True(t, cfg.FilterExtensions["val1"])
 	assert.True(t, cfg.FilterExtensions["val2"])
+	assert.True(t, cfg.DocumentExtensions["doc1"])
+	assert.True(t, cfg.DocumentExtensions["doc2"])
 	assert.True(t, cfg.ImageExtensions["img1"])
 	assert.True(t, cfg.SupportedImageExtensions["s1"])
 	assert.True(t, cfg.VideoExtensions["v1"])

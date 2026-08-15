@@ -33,6 +33,7 @@ type Config struct {
 	MaxTextFileBytes    int64 `mapstructure:"max_text_file_bytes"`
 
 	FilterExtensions         map[string]bool `mapstructure:"filter_extensions"`
+	DocumentExtensions       map[string]bool `mapstructure:"document_extensions"`
 	ImageExtensions          map[string]bool `mapstructure:"image_extensions"`
 	SupportedImageExtensions map[string]bool `mapstructure:"supported_image_extensions"`
 	VideoExtensions          map[string]bool `mapstructure:"video_extensions"`
@@ -43,6 +44,7 @@ type Config struct {
 	SkipTARFlattener         bool `mapstructure:"skip_tar_flattener"`
 	SkipTARFlattenerExplicit bool `mapstructure:"-"`
 	SkipFilter               bool `mapstructure:"skip_filter"`
+	SkipDocumentConverter    bool `mapstructure:"skip_document_converter"`
 	SkipImageConverter       bool `mapstructure:"skip_image_converter"`
 	SkipVideoExtractor       bool `mapstructure:"skip_video_extractor"`
 	SkipVisualMerger         bool `mapstructure:"skip_visual_merger"`
@@ -70,19 +72,21 @@ const (
 	defaultMaxPDFFileBytes     int64 = 48 * conv.MiB
 	defaultMaxTextFileBytes    int64 = 2 * conv.MiB
 
+	defaultDocumentExtensions       = ".doc,.docx,.docm,.odt,.epub,.rtf"
 	defaultImageExtensions          = "nil"
 	defaultSupportedImageExtensions = ".jpg,.jpeg,.png,.webp,.tif,.tiff"
 	defaultVideoExtensions          = "nil"
 	defaultVisualExtensions         = ".pdf," + defaultSupportedImageExtensions
 
-	defaultVerbose            = false
-	defaultSkipFlattener      = false
-	defaultSkipTARFlattener   = IsWindows
-	defaultSkipFilter         = true
-	defaultSkipImageConverter = false
-	defaultSkipVideoExtractor = false
-	defaultSkipVisualMerger   = false
-	defaultSkipTextMerger     = false
+	defaultVerbose               = false
+	defaultSkipFlattener         = false
+	defaultSkipTARFlattener      = IsWindows
+	defaultSkipFilter            = true
+	defaultSkipDocumentConverter = false
+	defaultSkipImageConverter    = false
+	defaultSkipVideoExtractor    = false
+	defaultSkipVisualMerger      = false
+	defaultSkipTextMerger        = false
 )
 
 // ShouldIgnore determines if a directory component contains macOS junk files.
