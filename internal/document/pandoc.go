@@ -3,15 +3,14 @@ package document
 import (
 	"context"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 )
 
-func (c *Converter) convertFile(ctx context.Context, inputPath, filename, ext string) error {
-	baseName := strings.TrimSuffix(filename, ext)
-	outputPath := filepath.Join(c.Dir, baseName+".md")
-	docMediaDir := filepath.Join(c.Dir, baseName+"_media")
+func (c *Converter) convertFile(ctx context.Context, inputPath, filename string) error {
+	outputPath := filepath.Join(c.Dir, filename+".md")
+	docMediaDir := filepath.Join(c.Dir, "pandoc_tmp")
 
 	args := []string{
 		inputPath,
@@ -26,7 +25,7 @@ func (c *Converter) convertFile(ctx context.Context, inputPath, filename, ext st
 		return fmt.Errorf("pandoc command failed: %w", err)
 	}
 
-	mediaMappings, err := c.flattenPandocMedia(docMediaDir, baseName)
+	mediaMappings, err := c.flattenPandocMedia(docMediaDir, filename)
 	if err != nil {
 		return fmt.Errorf("failed to flatten extracted document media: %w", err)
 	}
@@ -37,8 +36,12 @@ func (c *Converter) convertFile(ctx context.Context, inputPath, filename, ext st
 		}
 	}
 
-	if err := c.prependHeader(outputPath, baseName); err != nil {
+	if err := c.prependHeader(outputPath, filename); err != nil {
 		return fmt.Errorf("failed to prepend context header to markdown: %w", err)
+	}
+
+	if err := os.Remove(filepath.Clean(inputPath)); err != nil {
+		return fmt.Errorf("failed to remove original document after conversion: %w", err)
 	}
 
 	return nil

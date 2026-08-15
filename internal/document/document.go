@@ -61,7 +61,7 @@ func (c *Converter) Execute(ctx context.Context) error {
 		}
 
 		inputPath := filepath.Join(c.Dir, name)
-		if err := c.convertFile(ctx, inputPath, name, ext); err != nil {
+		if err := c.convertFile(ctx, inputPath, name); err != nil {
 			return fmt.Errorf("failed to convert file %s: %w", name, err)
 		}
 	}
@@ -95,65 +95,47 @@ func (c *Converter) flattenPandocMedia(docMediaDir, baseName string) (map[string
 		return mappings, nil
 	}
 
-	nestedMediaFolder := filepath.Join(cleanMediaDir, "word", "media")
-	dirFile, err := os.Open(filepath.Clean(nestedMediaFolder))
-	if os.IsNotExist(err) {
-		dirFile, err = os.Open(cleanMediaDir)
-	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to open media directory handle: %w", err)
-	}
-
-	filenames, err := dirFile.Readdirnames(-1)
-	if err != nil {
-		tryCloseMediaDir(dirFile)
-		return nil, fmt.Errorf("failed to read media filenames: %w", err)
-	}
-
-	for _, filename := range filenames {
-		safeFilename := filepath.Base(filename)
-
-		var pandocReference string
-		var currentPath string
-
-		if strings.Contains(dirFile.Name(), "word") {
-			pandocReference = filepath.Join(
-				filepath.Base(cleanMediaDir),
-				"word",
-				"media",
-				safeFilename,
-			)
-			currentPath = filepath.Join(cleanMediaDir, "word", "media", safeFilename)
-		} else {
-			pandocReference = filepath.Join(filepath.Base(cleanMediaDir), safeFilename)
-			currentPath = filepath.Join(cleanMediaDir, safeFilename)
+	//nolint:gosec
+	err := filepath.WalkDir(cleanMediaDir, func(path string, d os.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
 		}
+		if d.IsDir() {
+			return nil
+		}
+
+		safeFilename := filepath.Base(path)
+
+		relPath, err := filepath.Rel(cleanMediaDir, path)
+		if err != nil {
+			return fmt.Errorf("failed to determine relative path for %s: %w", path, err)
+		}
+		pandocReference := filepath.Base(cleanMediaDir) + "/" + filepath.ToSlash(relPath)
 
 		flattenedImageName := fmt.Sprintf("%s%s%s", baseName, c.FlatPathDelimiter, safeFilename)
-		newHomePath := filepath.Join(filepath.Clean(c.Dir), flattenedImageName)
+		newHomePath := filepath.Join(c.Dir, flattenedImageName)
 
-		if err := os.Rename(filepath.Clean(currentPath), newHomePath); err != nil {
-			tryCloseMediaDir(dirFile)
-			return nil, fmt.Errorf("failed to move media asset: %w", err)
+		if err := os.Rename(path, newHomePath); err != nil {
+			return fmt.Errorf(
+				"failed to move extracted media file %s to %s: %w",
+				path,
+				newHomePath,
+				err,
+			)
 		}
 
-		mappings[filepath.ToSlash(pandocReference)] = flattenedImageName
-		mappings[filepath.FromSlash(pandocReference)] = flattenedImageName
+		mappings[pandocReference] = flattenedImageName
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to process extracted media assets recursively: %w", err)
 	}
 
-	tryCloseMediaDir(dirFile)
-
 	if err := os.RemoveAll(cleanMediaDir); err != nil {
-		return nil, fmt.Errorf("failed to remove media directory: %w", err)
+		return nil, fmt.Errorf("failed to remove temporary media directory tree: %w", err)
 	}
 
 	return mappings, nil
-}
-
-func tryCloseMediaDir(f *os.File) {
-	if err := f.Close(); err != nil {
-		slog.Error("failed to close media directory handle", "err", err)
-	}
 }
 
 func (c *Converter) fixMarkdownImageLinks(markdownPath string, mappings map[string]string) error {
@@ -163,10 +145,14 @@ func (c *Converter) fixMarkdownImageLinks(markdownPath string, mappings map[stri
 		return fmt.Errorf("failed to read markdown file %s: %w", cleanPath, err)
 	}
 
-	text := string(content)
+	const pairCount = 2
+	replacements := make([]string, 0, len(mappings)*pairCount)
 	for oldPath, newFileName := range mappings {
-		text = strings.ReplaceAll(text, oldPath, newFileName)
+		replacements = append(replacements, oldPath, newFileName)
 	}
+
+	replacer := strings.NewReplacer(replacements...)
+	text := replacer.Replace(string(content))
 
 	//nolint:gosec
 	if err := os.WriteFile(cleanPath, []byte(text), c.TextFilePermissions); err != nil {
