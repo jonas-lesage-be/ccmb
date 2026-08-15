@@ -111,7 +111,9 @@ func bindFlags(cmd *cobra.Command, v *viper.Viper) error {
 	flags.Int("max-visual-merge-workers", 0, "Maximum concurrent visual merge workers")
 	flags.Duration("image-conversion-timeout", 0, "Maximum duration for an image conversion")
 	flags.Duration("video-extract-timeout", 0, "Maximum duration for video frame extraction")
+
 	flags.Float64("svg-canvas-resolution", 0, "Resolution for SVG canvas in pixels per millimeter")
+	flags.Float64("video-fps", 0, "Frames per second for video frame extraction")
 
 	flags.Int("est-file-count", 0, "Estimated number of input files")
 	flags.String("flat-path-delimiter", "", "Delimiter used in flattened paths")
