@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"ccmb/internal/config"
-	"ccmb/internal/conv"
 	"ccmb/internal/pathsafe"
 )
 
@@ -73,7 +72,6 @@ func (m *Merger) processFiles(ctx context.Context, files []os.DirEntry) ([]strin
 	var errs []error
 	var currentBuilder strings.Builder
 
-	maxSizeBytes := m.MaxTextFileBytes * conv.MiB
 	partCounter := 1
 
 	for _, file := range files {
@@ -87,21 +85,46 @@ func (m *Merger) processFiles(ctx context.Context, files []os.DirEntry) ([]strin
 		}
 
 		path := filepath.Join(m.TargetDir, file.Name())
-		batch = append(batch, path)
 
-		fileBlock, err := m.buildFileBlock(file.Name(), path)
-		if err != nil {
-			errs = append(errs, err)
+		cleanPath := filepath.Clean(path)
+		if !pathsafe.Contains(m.TargetDir, cleanPath) {
+			errs = append(
+				errs,
+				fmt.Errorf("failed to process %s: %w", file.Name(), ErrOutsideTargetDir),
+			)
 			continue
 		}
 
-		if int64(currentBuilder.Len()+len(fileBlock)) > maxSizeBytes {
-			m.flush(&currentBuilder, partCounter, &errs)
-			partCounter++
-			currentBuilder.Reset()
+		content, err := os.ReadFile(cleanPath)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("failed to read file %s: %w", file.Name(), err))
+			continue
 		}
 
-		currentBuilder.WriteString(fileBlock)
+		originalPath := config.DecodeFlatName(
+			file.Name(),
+			m.EscapedDelimiter,
+			m.DecodePlaceholder,
+			m.FlatPathDelimiter,
+		)
+
+		headerLength := len("<file path=\"") + len(originalPath) + len("\">\n")
+		footerLength := len("\n</file>\n\n")
+		totalBlockSize := int64(headerLength + len(content) + footerLength)
+
+		if int64(currentBuilder.Len())+totalBlockSize > m.MaxTextFileBytes &&
+			currentBuilder.Len() > 0 {
+			m.flush(&currentBuilder, partCounter, &errs)
+			partCounter++
+		}
+
+		batch = append(batch, path)
+
+		currentBuilder.WriteString("<file path=\"")
+		currentBuilder.WriteString(originalPath)
+		currentBuilder.WriteString("\">\n")
+		currentBuilder.Write(content)
+		currentBuilder.WriteString("\n</file>\n\n")
 	}
 
 	if ctx.Err() == nil {
@@ -115,37 +138,12 @@ func (m *Merger) shouldSkip(file os.DirEntry) bool {
 	return file.IsDir() || strings.HasPrefix(file.Name(), "FinalResult_")
 }
 
-func (m *Merger) buildFileBlock(name, path string) (string, error) {
-	cleanPath := filepath.Clean(path)
-
-	if !pathsafe.Contains(m.TargetDir, cleanPath) {
-		return "", fmt.Errorf("failed to process %s: %w", name, ErrOutsideTargetDir)
-	}
-
-	content, err := os.ReadFile(cleanPath)
-	if err != nil {
-		return "", fmt.Errorf("failed to read file %s: %w", name, err)
-	}
-
-	originalPath := config.DecodeFlatName(
-		name,
-		m.EscapedDelimiter,
-		m.DecodePlaceholder,
-		m.FlatPathDelimiter,
-	)
-
-	return fmt.Sprintf(
-		"<file path=\"%s\">\n%s\n</file>\n\n",
-		originalPath,
-		string(content),
-	), nil
-}
-
 func (m *Merger) flush(b *strings.Builder, counter int, errs *[]error) {
 	if b.Len() > 0 {
 		if err := m.writeTextPart(b.String(), counter); err != nil {
 			*errs = append(*errs, err)
 		}
+		b.Reset()
 	}
 }
 
