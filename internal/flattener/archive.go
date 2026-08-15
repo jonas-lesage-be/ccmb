@@ -43,6 +43,9 @@ func (f *Flattener) extractFileStream(
 
 	out, uniquePath, err := f.createUnique(targetPath, mode)
 	if err != nil {
+		if errors.Is(err, errFilteredExtension) {
+			return errFilteredExtension
+		}
 		return fmt.Errorf("failed to create target file %s: %w", targetPath, err)
 	}
 

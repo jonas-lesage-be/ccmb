@@ -2,6 +2,7 @@ package flattener
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"path/filepath"
@@ -71,6 +72,9 @@ func (f *Flattener) extractZIPMember(
 	}()
 
 	if err := f.extractFileStream(ctx, rc, targetPath, file.Mode(), file.Name); err != nil {
+		if errors.Is(err, errFilteredExtension) {
+			return nil
+		}
 		return fmt.Errorf("failed to extract zip member %s: %w", file.Name, err)
 	}
 

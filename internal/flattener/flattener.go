@@ -2,6 +2,7 @@ package flattener
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -14,6 +15,8 @@ import (
 
 	"ccmb/internal/config"
 )
+
+var errFilteredExtension = errors.New("file extension is blocked by filter configuration")
 
 // Flattener is responsible for flattening the directory structure of files.
 type Flattener struct {
@@ -169,6 +172,9 @@ func (f *Flattener) processFile(ctx context.Context, path string) error {
 	targetPath := filepath.Join(f.TargetDir, flatName)
 
 	if err := f.copyFileSecure(ctx, path, targetPath); err != nil {
+		if errors.Is(err, errFilteredExtension) {
+			return nil
+		}
 		return fmt.Errorf("error copying %s: %w", path, err)
 	}
 
@@ -182,6 +188,9 @@ func (f *Flattener) copyFileSecure(ctx context.Context, src, dst string) error {
 
 	out, resolvedDst, err := f.createUnique(dst, f.TargetDirPermissions)
 	if err != nil {
+		if errors.Is(err, errFilteredExtension) {
+			return errFilteredExtension
+		}
 		return fmt.Errorf("failed to create file %s: %w", dst, err)
 	}
 
@@ -218,8 +227,19 @@ func (f *Flattener) copyFileSecure(ctx context.Context, src, dst string) error {
 
 func (f *Flattener) createUnique(path string, mode os.FileMode) (*os.File, string, error) {
 	ext := Extension(path)
-	base := strings.TrimSuffix(path, ext)
 
+	if f.FilterExtensions[ext] {
+		slog.Debug(
+			"Intercepting and dropping blocked extension entry at creation point",
+			"extension",
+			ext,
+			"file",
+			filepath.Base(path),
+		)
+		return nil, "", errFilteredExtension
+	}
+
+	base := strings.TrimSuffix(path, ext)
 	candidate := path
 	for counter := 1; ; counter++ {
 		cleanCandidate := filepath.Clean(candidate)

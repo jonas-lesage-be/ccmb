@@ -3,6 +3,7 @@ package flattener
 import (
 	"archive/tar"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -139,6 +140,9 @@ func (f *Flattener) extractTARMember(
 		header.FileInfo().Mode(),
 		header.Name,
 	); err != nil {
+		if errors.Is(err, errFilteredExtension) {
+			return nil
+		}
 		return fmt.Errorf("failed to extract tar member %s: %w", header.Name, err)
 	}
 
