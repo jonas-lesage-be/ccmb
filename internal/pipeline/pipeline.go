@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
 	"time"
 
 	"ccmb/internal/config"
@@ -70,48 +71,6 @@ func (p pipelineStep) ShouldSkip(cfg *config.Config) bool {
 	}
 }
 
-func (p pipelineStep) Func(cfg *config.Config) func(context.Context) error {
-	switch p {
-	case flattenerStep:
-		return func(ctx context.Context) error {
-			f := flattener.NewFlattener(cfg)
-			return f.Execute(ctx)
-		}
-	case filterStep:
-		return func(_ context.Context) error {
-			f := filter.NewFilter(cfg)
-			return f.Execute()
-		}
-	case documentConverterStep:
-		return func(ctx context.Context) error {
-			c := document.NewConverter(cfg)
-			return c.Execute(ctx)
-		}
-	case imageConverterStep:
-		return func(ctx context.Context) error {
-			c := image.NewConverter(cfg)
-			return c.Execute(ctx)
-		}
-	case videoExtractorStep:
-		return func(ctx context.Context) error {
-			e := video.NewExtractor(cfg)
-			return e.Execute(ctx)
-		}
-	case visualMergerStep:
-		return func(ctx context.Context) error {
-			m := visualmerge.NewMerger(cfg)
-			return m.Execute(ctx)
-		}
-	case textMergerStep:
-		return func(ctx context.Context) error {
-			m := textmerge.NewMerger(cfg)
-			return m.Execute(ctx)
-		}
-	default:
-		return nil
-	}
-}
-
 // Pipeline represents the sequential processing pipeline.
 type Pipeline struct {
 	cfg   *config.Config
@@ -137,35 +96,79 @@ func NewPipeline(cfg *config.Config) *Pipeline {
 // Execute runs the entire pipeline based on the provided configuration.
 func (p *Pipeline) Execute(ctx context.Context) error {
 	slog.Info("Pipeline initialized", "source", p.cfg.SourceDir, "target", p.cfg.TargetDir)
-
 	startTime := time.Now()
+
+	if err := os.MkdirAll(p.cfg.TargetDir, p.cfg.TargetDirPermissions); err != nil {
+		return fmt.Errorf("failed to create target directory: %w", err)
+	}
+
+	tmpDir, err := os.MkdirTemp("", "ccmb_tmpdir_*")
+	if err != nil {
+		return fmt.Errorf("failed to create temporary directory: %w", err)
+	}
+	defer func() {
+		if cleanErr := os.RemoveAll(tmpDir); cleanErr != nil {
+			slog.Error("Failed to purge temporary directory", "err", cleanErr)
+		}
+	}()
+
+	tmpCfg := *p.cfg
+	tmpCfg.TargetDir = tmpDir
+
 	for _, step := range p.steps {
-		if err := p.runIf(ctx, step); err != nil {
-			return fmt.Errorf("pipeline aborted at step %s: %w", step.String(), err)
+		if step.ShouldSkip(p.cfg) {
+			continue
+		}
+
+		if err := p.executeStep(ctx, step, &tmpCfg, tmpDir); err != nil {
+			return err
 		}
 	}
-	duration := time.Since(startTime)
 
-	slog.Info("Pipeline execution successfully completed", "duration", duration)
-
+	slog.Info("Pipeline execution successfully completed", "duration", time.Since(startTime))
 	return nil
 }
 
-func (p *Pipeline) runIf(ctx context.Context, step pipelineStep) error {
-	if step.ShouldSkip(p.cfg) {
-		return nil
-	}
-
+func (p *Pipeline) executeStep(
+	ctx context.Context,
+	step pipelineStep,
+	tmpCfg *config.Config,
+	tmpDir string,
+) error {
 	logger := slog.With("step", int(step+1), "name", step.String())
 	logger.Info("Running step")
-
 	startTime := time.Now()
-	if err := step.Func(p.cfg)(ctx); err != nil {
-		return fmt.Errorf("pipeline aborted: %w", err)
-	}
-	duration := time.Since(startTime)
 
-	logger.Info("Step completed successfully", "duration", duration)
+	var err error
+	switch step {
+	case flattenerStep:
+		f := flattener.NewFlattener(tmpCfg)
+		err = f.Execute(ctx)
+	case filterStep:
+		f := filter.NewFilter(tmpCfg)
+		err = f.Execute()
+	case documentConverterStep:
+		c := document.NewConverter(tmpCfg)
+		err = c.Execute(ctx)
+	case imageConverterStep:
+		c := image.NewConverter(tmpCfg)
+		err = c.Execute(ctx)
+	case videoExtractorStep:
+		e := video.NewExtractor(tmpCfg)
+		err = e.Execute(ctx)
+	case visualMergerStep:
+		m := visualmerge.NewMerger(p.cfg)
+		err = m.Execute(ctx, tmpDir)
+	case textMergerStep:
+		m := textmerge.NewMerger(p.cfg)
+		err = m.Execute(ctx, tmpDir)
+	}
+
+	if err != nil {
+		return fmt.Errorf("pipeline aborted at step %s: %w", step.String(), err)
+	}
+
+	logger.Info("Step completed successfully", "duration", time.Since(startTime))
 
 	return nil
 }

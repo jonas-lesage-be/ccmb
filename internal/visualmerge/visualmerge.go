@@ -54,15 +54,15 @@ func NewMerger(cfg *config.Config) *Merger {
 }
 
 // Execute merges images and PDFs into size-constrained PDF files.
-func (m *Merger) Execute(ctx context.Context) error {
+func (m *Merger) Execute(ctx context.Context, tmpDir string) error {
 	slog.Debug("Converting and merging visual data")
 
-	files, err := os.ReadDir(m.TargetDir)
+	files, err := os.ReadDir(tmpDir)
 	if err != nil {
-		return fmt.Errorf("failed to read target directory %s: %w", m.TargetDir, err)
+		return fmt.Errorf("failed to read directory %s: %w", tmpDir, err)
 	}
 
-	jobs := m.filterFiles(files)
+	jobs := m.filterFiles(files, tmpDir)
 	if len(jobs) == 0 {
 		return nil
 	}
@@ -76,13 +76,13 @@ func (m *Merger) Execute(ctx context.Context) error {
 		originalPaths[i] = j.path
 	}
 	if err := cleanUpFiles(originalPaths); err != nil {
-		return fmt.Errorf("failed to clean up original visual files: %w", err)
+		return fmt.Errorf("failed to clean up temporary visual files: %w", err)
 	}
 
 	return nil
 }
 
-func (m *Merger) filterFiles(files []os.DirEntry) []job {
+func (m *Merger) filterFiles(files []os.DirEntry, baseDir string) []job {
 	var jobs []job
 	indexCounter := 0
 
@@ -100,7 +100,7 @@ func (m *Merger) filterFiles(files []os.DirEntry) []job {
 		jobs = append(jobs, job{
 			index: indexCounter,
 			name:  name,
-			path:  filepath.Join(m.TargetDir, name),
+			path:  filepath.Join(baseDir, name),
 		})
 		indexCounter++
 	}

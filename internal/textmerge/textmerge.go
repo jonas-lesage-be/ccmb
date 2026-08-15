@@ -43,19 +43,19 @@ func NewMerger(cfg *config.Config) *Merger {
 }
 
 // Execute merges all text files (.py, .js, .txt) into size-constrained text files.
-func (m *Merger) Execute(ctx context.Context) error {
+func (m *Merger) Execute(ctx context.Context, tmpDir string) error {
 	slog.Debug("Merging all text files")
 
 	if err := ctx.Err(); err != nil {
 		return fmt.Errorf("context error before starting text merge: %w", err)
 	}
 
-	files, err := os.ReadDir(m.TargetDir)
+	files, err := os.ReadDir(tmpDir)
 	if err != nil {
-		return fmt.Errorf("failed to read target directory: %w", err)
+		return fmt.Errorf("failed to read directory %s: %w", tmpDir, err)
 	}
 
-	batch, errs := m.processFiles(ctx, files)
+	batch, errs := m.processFiles(ctx, files, tmpDir)
 	if err := cleanUpFiles(batch); err != nil {
 		errs = append(errs, fmt.Errorf("failed to clean up text files: %w", err))
 	}
@@ -67,7 +67,11 @@ func (m *Merger) Execute(ctx context.Context) error {
 	return nil
 }
 
-func (m *Merger) processFiles(ctx context.Context, files []os.DirEntry) ([]string, []error) {
+func (m *Merger) processFiles(
+	ctx context.Context,
+	files []os.DirEntry,
+	baseDir string,
+) ([]string, []error) {
 	var batch []string
 	var errs []error
 	var currentBuilder strings.Builder
@@ -84,25 +88,26 @@ func (m *Merger) processFiles(ctx context.Context, files []os.DirEntry) ([]strin
 			continue
 		}
 
-		path := filepath.Join(m.TargetDir, file.Name())
+		name := file.Name()
+		path := filepath.Join(baseDir, name)
 
 		cleanPath := filepath.Clean(path)
-		if !pathsafe.Contains(m.TargetDir, cleanPath) {
+		if !pathsafe.Contains(baseDir, cleanPath) {
 			errs = append(
 				errs,
-				fmt.Errorf("failed to process %s: %w", file.Name(), ErrOutsideTargetDir),
+				fmt.Errorf("failed to process %s: %w", name, ErrOutsideTargetDir),
 			)
 			continue
 		}
 
 		content, err := os.ReadFile(cleanPath)
 		if err != nil {
-			errs = append(errs, fmt.Errorf("failed to read file %s: %w", file.Name(), err))
+			errs = append(errs, fmt.Errorf("failed to read file %s: %w", name, err))
 			continue
 		}
 
 		originalPath := config.DecodeFlatName(
-			file.Name(),
+			name,
 			m.EscapedDelimiter,
 			m.DecodePlaceholder,
 			m.FlatPathDelimiter,
