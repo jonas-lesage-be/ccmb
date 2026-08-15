@@ -20,6 +20,7 @@ type Config struct {
 	MaxDocumentWorkers     int           `mapstructure:"max_document_workers"`
 	MaxImageWorkers        int           `mapstructure:"max_image_workers"`
 	MaxVideoWorkers        int           `mapstructure:"max_video_workers"`
+	MaxVisualMergeWorkers  int           `mapstructure:"max_visual_merge_workers"`
 	ImageConversionTimeout time.Duration `mapstructure:"image_conversion_timeout"`
 	VideoExtractTimeout    time.Duration `mapstructure:"video_extract_timeout"`
 	SvgCanvasResolution    float64       `mapstructure:"svg_canvas_resolution"`
@@ -62,6 +63,7 @@ const (
 	defaultMaxDocumentWorkers     = 8
 	defaultMaxImageWorkers        = 8
 	defaultMaxVideoWorkers        = 4
+	defaultMaxVisualMergeWorkers  = 8
 	defaultImageConversionTimeout = 15 * time.Second
 	defaultVideoExtractTimeout    = 1 * time.Minute
 	defaultSvgCanvasResolution    = 300 / 25.4

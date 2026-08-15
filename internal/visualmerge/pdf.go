@@ -17,8 +17,8 @@ import (
 	"ccmb/internal/config"
 )
 
-func (m *Merger) preparePDFComponent(ctx context.Context, path string) (string, int64, error) {
-	convertedPDF, err := m.convertToHeaderedPDF(ctx, path, m.TargetDir)
+func (m *Merger) preparePDFComponent(ctx context.Context, j job) (string, int64, error) {
+	convertedPDF, err := m.convertToHeaderedPDF(ctx, j)
 	if err != nil {
 		return "", 0, err
 	}
@@ -36,30 +36,26 @@ func (m *Merger) preparePDFComponent(ctx context.Context, path string) (string, 
 	return convertedPDF, fi.Size(), nil
 }
 
-func (m *Merger) convertToHeaderedPDF(
-	ctx context.Context,
-	srcPath, targetDir string,
-) (string, error) {
+func (m *Merger) convertToHeaderedPDF(ctx context.Context, j job) (string, error) {
 	if err := ctx.Err(); err != nil {
-		return "", fmt.Errorf("context error before converting file %s: %w", srcPath, err)
+		return "", fmt.Errorf("context error before converting file %s: %w", j.path, err)
 	}
 
-	flatName := filepath.Base(srcPath)
-	ext := strings.ToLower(filepath.Ext(flatName))
-	outPDF := filepath.Join(targetDir, "tmp_"+flatName+".pdf")
+	ext := strings.ToLower(filepath.Ext(j.name))
+	outPDF := filepath.Join(os.TempDir(), fmt.Sprintf("ccmb_tmp_%d.pdf", j.index))
 
-	wm, err := m.createWatermark(flatName, ext)
+	wm, err := m.createWatermark(j.name, ext)
 	if err != nil {
-		return "", fmt.Errorf("failed to create watermark for %s: %w", flatName, err)
+		return "", fmt.Errorf("failed to create watermark for %s: %w", j.name, err)
 	}
 
 	if ext == ".pdf" {
-		err = pdfcpu_api.AddWatermarksFile(srcPath, outPDF, nil, wm, nil)
+		err = pdfcpu_api.AddWatermarksFile(j.path, outPDF, nil, wm, nil)
 		if err != nil {
-			return "", fmt.Errorf("failed to add watermark to PDF %s: %w", flatName, err)
+			return "", fmt.Errorf("failed to add watermark to PDF %s: %w", j.name, err)
 		}
 	} else {
-		err = importImageWithWatermark(srcPath, outPDF, flatName, wm)
+		err = importImageWithWatermark(j.path, outPDF, j.name, wm)
 		if err != nil {
 			return "", fmt.Errorf("failed to import image with watermark: %w", err)
 		}
@@ -89,11 +85,6 @@ func (m *Merger) createWatermark(flatName, ext string) (*pdfcpu_model.Watermark,
 		headerText = fmt.Sprintf("File path: %s frame number %s", cleanPath, frameNum)
 	}
 
-	// Optimized configuration string for maximum readability:
-	// - rot:0 -> Forces the text to be 100% horizontal
-	// - mode:2 -> Activates both Fill & Stroke (text + outline)
-	// - color:#000000 -> Fills the text with black
-	// - strokecolor:#ffffff -> Outlines the text with white
 	desc := "pos: tr, off: -6 -6, points: 10, scale: 1.0 abs, rot: 0, mode: 0," +
 		" color: #000000, bgcol: #ffffff, border: 1 #000000, margins: 4"
 	wm, err := pdfcpu.ParseTextWatermarkDetails(
@@ -109,24 +100,9 @@ func (m *Merger) createWatermark(flatName, ext string) (*pdfcpu_model.Watermark,
 	return wm, nil
 }
 
-func importImageWithWatermark(srcPath, outPDF, flatName string, wm *pdfcpu_model.Watermark) error {
-	imp := pdfcpu.DefaultImportConfig()
-	imp.PageSize = "Letter"
-
-	if err := pdfcpu_api.ImportImagesFile([]string{srcPath}, outPDF, imp, nil); err != nil {
-		return fmt.Errorf("failed to import image %s to PDF: %w", flatName, err)
-	}
-
-	if err := pdfcpu_api.AddWatermarksFile(outPDF, outPDF, nil, wm, nil); err != nil {
-		return fmt.Errorf("failed to add watermark to imported image PDF %s: %w", flatName, err)
-	}
-
-	return nil
-}
-
-func mergeBatch(files []string, targetDir string, counter int) error {
+func (m *Merger) mergeBatch(files []string, counter int) error {
 	fname := fmt.Sprintf("FinalResult_Visual_Part_%d.pdf", counter)
-	fpath := filepath.Join(targetDir, fname)
+	fpath := filepath.Join(m.TargetDir, fname)
 	slog.Info("Flushing and writing structured batch out to file payload", "file", fname)
 
 	err := pdfcpu_api.MergeCreateFile(files, fpath, false, nil)
@@ -136,6 +112,28 @@ func mergeBatch(files []string, targetDir string, counter int) error {
 
 	if err := cleanUpFiles(files); err != nil {
 		return fmt.Errorf("failed to clean up temporary batch files: %w", err)
+	}
+
+	return nil
+}
+
+func importImageWithWatermark(srcPath, outPDF, flatName string, wm *pdfcpu_model.Watermark) error {
+	imp := pdfcpu.DefaultImportConfig()
+	imp.PageSize = "Letter"
+
+	cleanTempFile := outPDF + ".raw.pdf"
+	defer func() {
+		if err := os.Remove(cleanTempFile); err != nil {
+			slog.Error("Failed to delete file", "path", cleanTempFile, "err", err)
+		}
+	}()
+
+	if err := pdfcpu_api.ImportImagesFile([]string{srcPath}, cleanTempFile, imp, nil); err != nil {
+		return fmt.Errorf("failed to import image %s to PDF: %w", flatName, err)
+	}
+
+	if err := pdfcpu_api.AddWatermarksFile(cleanTempFile, outPDF, nil, wm, nil); err != nil {
+		return fmt.Errorf("failed to add watermark to imported image PDF %s: %w", flatName, err)
 	}
 
 	return nil

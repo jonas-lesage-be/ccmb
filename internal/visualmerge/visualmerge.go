@@ -9,12 +9,15 @@ import (
 	"path/filepath"
 	"strings"
 
+	"golang.org/x/sync/errgroup"
+
 	"ccmb/internal/config"
 )
 
 // Merger is responsible for merging images and PDFs into size-constrained PDF files.
 type Merger struct {
 	TargetDir       string
+	MaxWorkers      int
 	MaxPDFFileBytes int64
 
 	FlatPathDelimiter string
@@ -24,10 +27,22 @@ type Merger struct {
 	VisualExtensions map[string]bool
 }
 
+type job struct {
+	index int
+	name  string
+	path  string
+}
+
+type jobResult struct {
+	path string
+	size int64
+}
+
 // NewMerger creates a new instance of Merger using the application configuration.
 func NewMerger(cfg *config.Config) *Merger {
 	return &Merger{
 		TargetDir:       cfg.TargetDir,
+		MaxWorkers:      cfg.MaxVisualMergeWorkers,
 		MaxPDFFileBytes: cfg.MaxPDFFileBytes,
 
 		FlatPathDelimiter: cfg.FlatPathDelimiter,
@@ -47,64 +62,109 @@ func (m *Merger) Execute(ctx context.Context) error {
 		return fmt.Errorf("failed to read target directory %s: %w", m.TargetDir, err)
 	}
 
-	visualFiles := m.filterVisualFiles(files)
-	if err := m.processVisualFiles(ctx, visualFiles); err != nil {
+	jobs := m.filterFiles(files)
+	if len(jobs) == 0 {
+		return nil
+	}
+
+	if err := m.processFiles(ctx, jobs); err != nil {
 		return fmt.Errorf("failed to process visual files: %w", err)
 	}
-	if err := cleanUpFiles(visualFiles); err != nil {
+
+	originalPaths := make([]string, len(jobs))
+	for i, j := range jobs {
+		originalPaths[i] = j.path
+	}
+	if err := cleanUpFiles(originalPaths); err != nil {
 		return fmt.Errorf("failed to clean up original visual files: %w", err)
 	}
 
 	return nil
 }
 
-func (m *Merger) filterVisualFiles(files []os.DirEntry) []string {
-	var visualFiles []string
+func (m *Merger) filterFiles(files []os.DirEntry) []job {
+	var jobs []job
+	indexCounter := 0
 
 	for _, file := range files {
 		if file.IsDir() {
 			continue
 		}
 
-		if ext := strings.ToLower(filepath.Ext(file.Name())); m.VisualExtensions[ext] {
-			visualFiles = append(visualFiles, filepath.Join(m.TargetDir, file.Name()))
-		}
-	}
-
-	return visualFiles
-}
-
-func (m *Merger) processVisualFiles(ctx context.Context, files []string) error {
-	var currentBatch []string
-	var currentSizeBytes int64
-	partCounter := 1
-
-	for _, path := range files {
-		if err := ctx.Err(); err != nil {
-			return fmt.Errorf("context error while processing file %s: %w", path, err)
-		}
-
-		convertedPDF, size, err := m.preparePDFComponent(ctx, path)
-		if err != nil {
-			slog.Warn("Skipping asset", "file", filepath.Base(path), "err", err)
+		name := file.Name()
+		ext := strings.ToLower(filepath.Ext(name))
+		if m.VisualExtensions != nil && !m.VisualExtensions[ext] {
 			continue
 		}
 
-		if len(currentBatch) > 0 && currentSizeBytes+size > m.MaxPDFFileBytes {
-			if err := mergeBatch(currentBatch, m.TargetDir, partCounter); err != nil {
+		jobs = append(jobs, job{
+			index: indexCounter,
+			name:  name,
+			path:  filepath.Join(m.TargetDir, name),
+		})
+		indexCounter++
+	}
+
+	return jobs
+}
+
+func (m *Merger) processFiles(ctx context.Context, jobs []job) error {
+	results := make([]jobResult, len(jobs))
+	g, ctx := errgroup.WithContext(ctx)
+	g.SetLimit(m.MaxWorkers)
+
+	for _, j := range jobs {
+		g.Go(func() error {
+			return m.processJob(ctx, results, j)
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		return fmt.Errorf("failed to process visual files concurrently: %w", err)
+	}
+
+	if err := m.mergeBatches(results); err != nil {
+		return fmt.Errorf("failed to merge batches: %w", err)
+	}
+
+	return nil
+}
+
+func (m *Merger) processJob(ctx context.Context, results []jobResult, j job) error {
+	convertedPDF, size, err := m.preparePDFComponent(ctx, j)
+	if err != nil {
+		slog.Warn("Skipping asset due to generation error", "file", j.name, "err", err)
+		return nil
+	}
+	results[j.index] = jobResult{path: convertedPDF, size: size}
+	return nil
+}
+
+func (m *Merger) mergeBatches(results []jobResult) error {
+	var batch []string
+	var currentSizeBytes int64
+	partCounter := 1
+
+	for _, res := range results {
+		if res.path == "" {
+			continue
+		}
+
+		if len(batch) > 0 && currentSizeBytes+res.size > m.MaxPDFFileBytes {
+			if err := m.mergeBatch(batch, partCounter); err != nil {
 				return fmt.Errorf("failed to merge intermediate batch %d: %w", partCounter, err)
 			}
 			partCounter++
-			currentBatch = nil
+			batch = nil
 			currentSizeBytes = 0
 		}
 
-		currentBatch = append(currentBatch, convertedPDF)
-		currentSizeBytes += size
+		batch = append(batch, res.path)
+		currentSizeBytes += res.size
 	}
 
-	if len(currentBatch) > 0 {
-		if err := mergeBatch(currentBatch, m.TargetDir, partCounter); err != nil {
+	if len(batch) > 0 {
+		if err := m.mergeBatch(batch, partCounter); err != nil {
 			return fmt.Errorf("failed to merge final batch %d: %w", partCounter, err)
 		}
 	}
@@ -116,7 +176,7 @@ func cleanUpFiles(files []string) error {
 	var errs []error
 
 	for _, f := range files {
-		if err := os.Remove(f); err != nil {
+		if err := os.Remove(f); err != nil && !errors.Is(err, os.ErrNotExist) {
 			errs = append(errs, fmt.Errorf("failed to delete %s: %w", f, err))
 		}
 	}

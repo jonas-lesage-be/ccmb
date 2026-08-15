@@ -8,6 +8,7 @@
   "max_document_workers": 8,
   "max_image_workers": 8,
   "max_video_workers": 4,
+  "max_visual_merge_workers": 8,
   "image_conversion_timeout": "15s",
   "video_extract_timeout": "1m",
   "svg_canvas_resolution": 11.811023622047244,

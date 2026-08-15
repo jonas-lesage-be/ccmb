@@ -56,9 +56,8 @@ func (m *Merger) Execute(ctx context.Context) error {
 		return fmt.Errorf("failed to read target directory: %w", err)
 	}
 
-	textBatch, errs := m.processFiles(ctx, files)
-
-	if err := cleanUpFiles(textBatch); err != nil {
+	batch, errs := m.processFiles(ctx, files)
+	if err := cleanUpFiles(batch); err != nil {
 		errs = append(errs, fmt.Errorf("failed to clean up text files: %w", err))
 	}
 
@@ -70,7 +69,7 @@ func (m *Merger) Execute(ctx context.Context) error {
 }
 
 func (m *Merger) processFiles(ctx context.Context, files []os.DirEntry) ([]string, []error) {
-	var textBatch []string
+	var batch []string
 	var errs []error
 	var currentBuilder strings.Builder
 
@@ -88,7 +87,7 @@ func (m *Merger) processFiles(ctx context.Context, files []os.DirEntry) ([]strin
 		}
 
 		path := filepath.Join(m.TargetDir, file.Name())
-		textBatch = append(textBatch, path)
+		batch = append(batch, path)
 
 		fileBlock, err := m.buildFileBlock(file.Name(), path)
 		if err != nil {
@@ -109,7 +108,7 @@ func (m *Merger) processFiles(ctx context.Context, files []os.DirEntry) ([]strin
 		m.flush(&currentBuilder, partCounter, &errs)
 	}
 
-	return textBatch, errs
+	return batch, errs
 }
 
 func (m *Merger) shouldSkip(file os.DirEntry) bool {

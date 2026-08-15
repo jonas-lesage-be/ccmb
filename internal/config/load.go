@@ -28,8 +28,10 @@ func NewViper() *viper.Viper {
 	v.SetDefault("text_file_permissions", defaultTextFilePermissions)
 
 	v.SetDefault("max_flattener_workers", defaultMaxFlattenerWorkers)
+	v.SetDefault("max_document_workers", defaultMaxDocumentWorkers)
 	v.SetDefault("max_image_workers", defaultMaxImageWorkers)
 	v.SetDefault("max_video_workers", defaultMaxVideoWorkers)
+	v.SetDefault("max_visual_merge_workers", defaultMaxVisualMergeWorkers)
 	v.SetDefault("image_conversion_timeout", defaultImageConversionTimeout)
 	v.SetDefault("video_extract_timeout", defaultVideoExtractTimeout)
 	v.SetDefault("svg_canvas_resolution", defaultSvgCanvasResolution)

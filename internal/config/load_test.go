@@ -51,6 +51,7 @@ func TestLoad_WithConfigFiles(t *testing.T) {
 			assert.Equal(t, 8, cfg.MaxFlattenerWorkers)
 			assert.Equal(t, 8, cfg.MaxImageWorkers)
 			assert.Equal(t, 4, cfg.MaxVideoWorkers)
+			assert.Equal(t, 8, cfg.MaxVisualMergeWorkers)
 			assert.Equal(t, 15*time.Second, cfg.ImageConversionTimeout)
 			assert.Equal(t, 1*time.Minute, cfg.VideoExtractTimeout)
 			assert.InDelta(t, 300/25.4, cfg.SvgCanvasResolution, 0.000001)

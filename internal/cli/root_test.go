@@ -43,6 +43,7 @@ func TestNewRootCommand_UsesDefaultsWithoutFlags(t *testing.T) {
 	assert.Equal(t, 8, cfg.MaxDocumentWorkers)
 	assert.Equal(t, 8, cfg.MaxImageWorkers)
 	assert.Equal(t, 4, cfg.MaxVideoWorkers)
+	assert.Equal(t, 8, cfg.MaxVisualMergeWorkers)
 	assert.Equal(t, 15*time.Second, cfg.ImageConversionTimeout)
 	assert.Equal(t, 1*time.Minute, cfg.VideoExtractTimeout)
 	assert.InDelta(t, 300.0/25.4, cfg.SvgCanvasResolution, 0.000001)
@@ -113,6 +114,7 @@ func TestNewRootCommand_FlagsOverrideDefaults(t *testing.T) {
 		"--max-document-workers", "12",
 		"--max-image-workers", "20",
 		"--max-video-workers", "15",
+		"--max-visual-merge-workers", "8",
 		"--image-conversion-timeout", "20s",
 		"--video-extract-timeout", "2m",
 		"--svg-canvas-resolution", "600.0",
@@ -163,6 +165,7 @@ func TestNewRootCommand_FlagsOverrideDefaults(t *testing.T) {
 	assert.Equal(t, 12, cfg.MaxDocumentWorkers)
 	assert.Equal(t, 20, cfg.MaxImageWorkers)
 	assert.Equal(t, 15, cfg.MaxVideoWorkers)
+	assert.Equal(t, 8, cfg.MaxVisualMergeWorkers)
 	assert.Equal(t, 20*time.Second, cfg.ImageConversionTimeout)
 	assert.Equal(t, 2*time.Minute, cfg.VideoExtractTimeout)
 	assert.InDelta(t, 600.0, cfg.SvgCanvasResolution, 0.000001)
