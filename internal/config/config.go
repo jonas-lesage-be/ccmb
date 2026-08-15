@@ -23,7 +23,9 @@ type Config struct {
 	MaxVisualMergeWorkers  int           `mapstructure:"max_visual_merge_workers"`
 	ImageConversionTimeout time.Duration `mapstructure:"image_conversion_timeout"`
 	VideoExtractTimeout    time.Duration `mapstructure:"video_extract_timeout"`
-	SvgCanvasResolution    float64       `mapstructure:"svg_canvas_resolution"`
+
+	SvgCanvasResolution float64 `mapstructure:"svg_canvas_resolution"`
+	VideoFps            float64 `mapstructure:"video_fps"`
 
 	EstFileCount      int    `mapstructure:"est_file_count"`
 	FlatPathDelimiter string `mapstructure:"flat_path_delimiter"`
@@ -66,7 +68,9 @@ const (
 	defaultMaxVisualMergeWorkers  = 8
 	defaultImageConversionTimeout = 15 * time.Second
 	defaultVideoExtractTimeout    = 1 * time.Minute
-	defaultSvgCanvasResolution    = 300 / 25.4
+
+	defaultSvgCanvasResolution = 300 / 25.4
+	defaultVideoFps            = 1.0
 
 	defaultEstFileCount      = 128
 	defaultFlatPathDelimiter = "--"

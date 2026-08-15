@@ -11,7 +11,9 @@
   "max_visual_merge_workers": 8,
   "image_conversion_timeout": "15s",
   "video_extract_timeout": "1m",
+
   "svg_canvas_resolution": 11.811023622047244,
+  "video_fps": 60.0,
 
   "est_file_count": 128,
   "flat_path_delimiter": "--",

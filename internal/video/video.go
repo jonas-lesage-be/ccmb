@@ -22,6 +22,7 @@ type Extractor struct {
 
 	MaxWorkers int
 	Timeout    time.Duration
+	Fps        float64
 
 	FlatPathDelimiter string
 	VideoExtensions   map[string]bool
@@ -39,6 +40,7 @@ func NewExtractor(cfg *config.Config) *Extractor {
 
 		MaxWorkers: cfg.MaxVideoWorkers,
 		Timeout:    cfg.VideoExtractTimeout,
+		Fps:        cfg.VideoFps,
 
 		FlatPathDelimiter: cfg.FlatPathDelimiter,
 		VideoExtensions:   cfg.VideoExtensions,

@@ -54,7 +54,9 @@ func TestLoad_WithConfigFiles(t *testing.T) {
 			assert.Equal(t, 8, cfg.MaxVisualMergeWorkers)
 			assert.Equal(t, 15*time.Second, cfg.ImageConversionTimeout)
 			assert.Equal(t, 1*time.Minute, cfg.VideoExtractTimeout)
+
 			assert.InDelta(t, 300/25.4, cfg.SvgCanvasResolution, 0.000001)
+			assert.InDelta(t, 60.0, cfg.VideoFps, 0.000001)
 
 			assert.Equal(t, 128, cfg.EstFileCount)
 			assert.Equal(t, "--", cfg.FlatPathDelimiter)
@@ -130,6 +132,7 @@ func TestLoad_UsesOverrides(t *testing.T) {
 	v.Set("image_conversion_timeout", "20s")
 	v.Set("video_extract_timeout", "2m")
 	v.Set("svg_canvas_resolution", 600.0)
+	v.Set("video_fps", 24.0)
 
 	v.Set("est_file_count", 512)
 	v.Set("flat_path_delimiter", "__")
@@ -173,7 +176,9 @@ func TestLoad_UsesOverrides(t *testing.T) {
 	assert.Equal(t, 15, cfg.MaxVideoWorkers)
 	assert.Equal(t, 20*time.Second, cfg.ImageConversionTimeout)
 	assert.Equal(t, 2*time.Minute, cfg.VideoExtractTimeout)
+
 	assert.InDelta(t, 600.0, cfg.SvgCanvasResolution, 0.000001)
+	assert.InDelta(t, 24.0, cfg.VideoFps, 0.000001)
 
 	assert.Equal(t, 512, cfg.EstFileCount)
 	assert.Equal(t, "__", cfg.FlatPathDelimiter)

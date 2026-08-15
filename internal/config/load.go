@@ -34,7 +34,9 @@ func NewViper() *viper.Viper {
 	v.SetDefault("max_visual_merge_workers", defaultMaxVisualMergeWorkers)
 	v.SetDefault("image_conversion_timeout", defaultImageConversionTimeout)
 	v.SetDefault("video_extract_timeout", defaultVideoExtractTimeout)
+
 	v.SetDefault("svg_canvas_resolution", defaultSvgCanvasResolution)
+	v.SetDefault("video_fps", defaultVideoFps)
 
 	v.SetDefault("est_file_count", defaultEstFileCount)
 	v.SetDefault("flat_path_delimiter", defaultFlatPathDelimiter)

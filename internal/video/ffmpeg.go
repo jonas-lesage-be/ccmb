@@ -22,6 +22,8 @@ func (e *Extractor) extractFrames(ctx context.Context, path string) error {
 	ctx, cancel := context.WithTimeout(ctx, e.Timeout)
 	defer cancel()
 
+	fpsArg := fmt.Sprintf("fps=%g", e.Fps)
+
 	//nolint:gosec
 	cmd := exec.CommandContext(
 		ctx,
@@ -33,8 +35,8 @@ func (e *Extractor) extractFrames(ctx context.Context, path string) error {
 		"-sn",
 		// Input file.
 		"-i", path,
-		// Extract 1 frame per second using variable frame rate mode.
-		"-vf", "fps=1",
+		// Extract frames using variable frame rate mode.
+		"-vf", fpsArg,
 		"-fps_mode", "vfr",
 		// Use high quality.
 		"-q:v", "2",
