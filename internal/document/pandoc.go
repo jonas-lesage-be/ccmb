@@ -10,7 +10,7 @@ import (
 
 func (c *Converter) convertFile(ctx context.Context, inputPath, filename string) error {
 	outputPath := filepath.Join(c.Dir, filename+".md")
-	docMediaDir := filepath.Join(c.Dir, "pandoc_tmp")
+	docMediaDir := filepath.Join(c.Dir, "pandoc_tmp_"+filename)
 
 	args := []string{
 		inputPath,

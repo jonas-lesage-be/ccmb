@@ -40,6 +40,7 @@ func TestNewRootCommand_UsesDefaultsWithoutFlags(t *testing.T) {
 	assert.Equal(t, os.FileMode(0o600), cfg.TextFilePermissions)
 
 	assert.Equal(t, 8, cfg.MaxFlattenerWorkers)
+	assert.Equal(t, 8, cfg.MaxDocumentWorkers)
 	assert.Equal(t, 8, cfg.MaxImageWorkers)
 	assert.Equal(t, 4, cfg.MaxVideoWorkers)
 	assert.Equal(t, 15*time.Second, cfg.ImageConversionTimeout)
@@ -109,6 +110,7 @@ func TestNewRootCommand_FlagsOverrideDefaults(t *testing.T) {
 		"--text-file-permissions", "0o660",
 
 		"--max-flattener-workers", "10",
+		"--max-document-workers", "12",
 		"--max-image-workers", "20",
 		"--max-video-workers", "15",
 		"--image-conversion-timeout", "20s",
@@ -158,6 +160,7 @@ func TestNewRootCommand_FlagsOverrideDefaults(t *testing.T) {
 	assert.Equal(t, os.FileMode(0o660), cfg.TextFilePermissions)
 
 	assert.Equal(t, 10, cfg.MaxFlattenerWorkers)
+	assert.Equal(t, 12, cfg.MaxDocumentWorkers)
 	assert.Equal(t, 20, cfg.MaxImageWorkers)
 	assert.Equal(t, 15, cfg.MaxVideoWorkers)
 	assert.Equal(t, 20*time.Second, cfg.ImageConversionTimeout)

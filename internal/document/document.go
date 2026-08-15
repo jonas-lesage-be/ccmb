@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"golang.org/x/sync/errgroup"
+
 	"ccmb/internal/config"
 )
 
@@ -16,9 +18,15 @@ import (
 type Converter struct {
 	Dir                 string
 	TextFilePermissions os.FileMode
+	MaxWorkers          int
 
 	FlatPathDelimiter  string
 	DocumentExtensions map[string]bool
+}
+
+type job struct {
+	name string
+	path string
 }
 
 // NewConverter creates a new instance of Converter using the application configuration.
@@ -26,6 +34,7 @@ func NewConverter(cfg *config.Config) *Converter {
 	return &Converter{
 		Dir:                 cfg.TargetDir,
 		TextFilePermissions: cfg.TextFilePermissions,
+		MaxWorkers:          cfg.MaxImageWorkers,
 
 		FlatPathDelimiter:  cfg.FlatPathDelimiter,
 		DocumentExtensions: cfg.DocumentExtensions,
@@ -38,32 +47,61 @@ func (c *Converter) Execute(ctx context.Context) error {
 		return fmt.Errorf("pandoc is not installed or not found in PATH: %w", err)
 	}
 
-	slog.Debug("Converting supported documents to Markdown")
+	slog.Debug("Converting supported document files concurrently")
 
 	files, err := os.ReadDir(c.Dir)
 	if err != nil {
 		return fmt.Errorf("failed to read input directory: %w", err)
 	}
 
-	for _, file := range files {
-		if err := ctx.Err(); err != nil {
-			return fmt.Errorf("context error while processing files: %w", err)
-		}
+	jobs := c.filterFiles(files)
+	if len(jobs) == 0 {
+		return nil
+	}
 
+	g, ctx := errgroup.WithContext(ctx)
+	g.SetLimit(c.MaxWorkers)
+
+	for _, j := range jobs {
+		g.Go(func() error {
+			return c.processJob(ctx, j)
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		return fmt.Errorf("document conversion failed: %w", err)
+	}
+
+	return nil
+}
+
+func (c *Converter) filterFiles(files []os.DirEntry) []job {
+	var jobs []job
+
+	for _, file := range files {
 		if file.IsDir() {
 			continue
 		}
 
 		name := file.Name()
 		ext := filepath.Ext(name)
+
 		if !c.DocumentExtensions[ext] {
 			continue
 		}
 
-		inputPath := filepath.Join(c.Dir, name)
-		if err := c.convertFile(ctx, inputPath, name); err != nil {
-			return fmt.Errorf("failed to convert file %s: %w", name, err)
-		}
+		jobs = append(jobs, job{
+			name: name,
+			path: filepath.Join(c.Dir, name),
+		})
+	}
+
+	return jobs
+}
+
+func (c *Converter) processJob(ctx context.Context, j job) error {
+	if err := c.convertFile(ctx, j.path, j.name); err != nil {
+		return fmt.Errorf("error converting %s: %w", j.name, err)
 	}
 
 	return nil
@@ -77,7 +115,9 @@ func (c *Converter) prependHeader(filePath, docName string) error {
 	}
 
 	header := fmt.Sprintf("# Document Source: %s\n\n", docName)
-	newContent := append([]byte(header), content...)
+	newContent := make([]byte, 0, len(header)+len(content))
+	newContent = append(newContent, header...)
+	newContent = append(newContent, content...)
 
 	//nolint:gosec
 	if err := os.WriteFile(cleanPath, newContent, c.TextFilePermissions); err != nil {

@@ -105,6 +105,7 @@ func bindFlags(cmd *cobra.Command, v *viper.Viper) error {
 	)
 
 	flags.Int("max-flattener-workers", 0, "Maximum concurrent flattener workers")
+	flags.Int("max-document-workers", 0, "Maximum concurrent document workers")
 	flags.Int("max-image-workers", 0, "Maximum concurrent image workers")
 	flags.Int("max-video-workers", 0, "Maximum concurrent video workers")
 	flags.Duration("image-conversion-timeout", 0, "Maximum duration for an image conversion")

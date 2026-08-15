@@ -17,6 +17,7 @@ type Config struct {
 	TextFilePermissions  os.FileMode `mapstructure:"text_file_permissions"`
 
 	MaxFlattenerWorkers    int           `mapstructure:"max_flattener_workers"`
+	MaxDocumentWorkers     int           `mapstructure:"max_document_workers"`
 	MaxImageWorkers        int           `mapstructure:"max_image_workers"`
 	MaxVideoWorkers        int           `mapstructure:"max_video_workers"`
 	ImageConversionTimeout time.Duration `mapstructure:"image_conversion_timeout"`
@@ -58,6 +59,7 @@ const (
 	defaultTextFilePermissions  os.FileMode = 0o600
 
 	defaultMaxFlattenerWorkers    = 8
+	defaultMaxDocumentWorkers     = 8
 	defaultMaxImageWorkers        = 8
 	defaultMaxVideoWorkers        = 4
 	defaultImageConversionTimeout = 15 * time.Second

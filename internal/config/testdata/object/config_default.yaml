@@ -4,6 +4,7 @@ target_dir_permissions: 0o700
 text_file_permissions: 0o600
 
 max_flattener_workers: 8
+max_document_workers: 8
 max_image_workers: 8
 max_video_workers: 4
 image_conversion_timeout: "15s"
