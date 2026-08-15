@@ -138,13 +138,15 @@ func NewPipeline(cfg *config.Config) *Pipeline {
 func (p *Pipeline) Execute(ctx context.Context) error {
 	slog.Info("Pipeline initialized", "source", p.cfg.SourceDir, "target", p.cfg.TargetDir)
 
+	startTime := time.Now()
 	for _, step := range p.steps {
 		if err := p.runIf(ctx, step); err != nil {
 			return fmt.Errorf("pipeline aborted at step %s: %w", step.String(), err)
 		}
 	}
+	duration := time.Since(startTime)
 
-	slog.Info("Pipeline execution successfully completed")
+	slog.Info("Pipeline execution successfully completed", "duration", duration)
 
 	return nil
 }
