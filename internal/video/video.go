@@ -143,7 +143,7 @@ func (e *Extractor) shouldExtract(ctx context.Context, path string) (bool, error
 
 func (e *Extractor) processFile(ctx context.Context, name, path string) error {
 	if err := e.extractFrames(ctx, path); err != nil {
-		return fmt.Errorf("failed to extract frames: %w", err)
+		return err
 	}
 
 	if err := os.Remove(path); err != nil {

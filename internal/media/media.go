@@ -3,7 +3,6 @@ package media
 import (
 	"context"
 	"fmt"
-	"os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -36,38 +35,9 @@ func MainType(mtype string) string {
 // It only decodes the first two frames (via -read_intervals),
 // which is enough to determine the answer without a full decode.
 func ProbeFrameType(ctx context.Context, path string, timeout time.Duration) (FrameType, error) {
-	if _, err := exec.LookPath("ffprobe"); err != nil {
-		return UnknownFrameType, fmt.Errorf(
-			"ffprobe is not installed or not found in PATH: %w",
-			err,
-		)
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
-	//nolint:gosec
-	cmd := exec.CommandContext(
-		ctx,
-		"ffprobe",
-		// Verbose level: error.
-		"-v", "error",
-		// Show streams.
-		"-select_streams", "v",
-		// Only decode the first 2 frames of the stream.
-		"-read_intervals", "%+#2",
-		// Count the number of frames.
-		"-count_frames",
-		// Only show the number of read frames
-		"-show_entries", "stream=nb_read_frames",
-		// Strip the keys from the output.
-		"-of", "default=noprint_wrappers=1:nokey=1",
-		path,
-	)
-
-	output, err := cmd.Output()
+	output, err := runFFprobeCommand(ctx, path, timeout)
 	if err != nil {
-		return UnknownFrameType, fmt.Errorf("ffprobe failed: %w", err)
+		return UnknownFrameType, err
 	}
 
 	frameCount, err := numberOfReadFrames(output)

@@ -99,6 +99,11 @@ func bindFlags(cmd *cobra.Command, v *viper.Viper) error {
 		"Permissions for the target directory (for example, 0o700)",
 	)
 	flags.String(
+		"target-file-permissions",
+		"",
+		"Permissions for generated files (for example, 0o600)",
+	)
+	flags.String(
 		"text-file-permissions",
 		"",
 		"Permissions for generated text files (for example, 0o600)",

@@ -107,8 +107,8 @@ func (p *Pipeline) Execute(ctx context.Context) error {
 		return fmt.Errorf("failed to create temporary directory: %w", err)
 	}
 	defer func() {
-		if cleanErr := os.RemoveAll(tmpDir); cleanErr != nil {
-			slog.Error("Failed to purge temporary directory", "err", cleanErr)
+		if err := os.RemoveAll(tmpDir); err != nil {
+			slog.Error("Failed to purge temporary directory", "err", err)
 		}
 	}()
 

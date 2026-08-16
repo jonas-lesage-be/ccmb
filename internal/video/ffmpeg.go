@@ -7,6 +7,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"ccmb/internal/media"
 )
 
 func (e *Extractor) extractFrames(ctx context.Context, path string) error {
@@ -19,15 +21,9 @@ func (e *Extractor) extractFrames(ctx context.Context, path string) error {
 
 	slog.Debug("Running FFmpeg to extract frames", "file", filepath.Base(path))
 
-	ctx, cancel := context.WithTimeout(ctx, e.Timeout)
-	defer cancel()
-
 	fpsArg := fmt.Sprintf("fps=%g", e.Fps)
 
-	//nolint:gosec
-	cmd := exec.CommandContext(
-		ctx,
-		"ffmpeg",
+	args := []string{
 		// Use hardware acceleration if available.
 		"-hwaccel", "auto",
 		// No audio and subtitle streams.
@@ -46,10 +42,10 @@ func (e *Extractor) extractFrames(ctx context.Context, path string) error {
 		"-y",
 		// Output pattern.
 		outputPattern,
-	)
+	}
 
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to run ffmpeg command: %w", err)
+	if err := media.RunFFmpegCommand(ctx, e.Timeout, args...); err != nil {
+		return fmt.Errorf("failed to extract frames: %w", err)
 	}
 
 	return nil

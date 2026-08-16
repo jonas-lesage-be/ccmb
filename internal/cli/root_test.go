@@ -37,6 +37,7 @@ func TestNewRootCommand_UsesDefaultsWithoutFlags(t *testing.T) {
 	assert.Equal(t, ".", cfg.SourceDir)
 	assert.Equal(t, "./_ccmb_output", cfg.TargetDir)
 	assert.Equal(t, os.FileMode(0o700), cfg.TargetDirPermissions)
+	assert.Equal(t, os.FileMode(0o600), cfg.TargetFilePermissions)
 	assert.Equal(t, os.FileMode(0o600), cfg.TextFilePermissions)
 
 	assert.Equal(t, 8, cfg.MaxFlattenerWorkers)
@@ -110,6 +111,7 @@ func TestNewRootCommand_FlagsOverrideDefaults(t *testing.T) {
 		"--source-dir", "override",
 		"--target-dir", "overridden_target",
 		"--target-dir-permissions", "0o770",
+		"--target-file-permissions", "0o660",
 		"--text-file-permissions", "0o660",
 
 		"--max-flattener-workers", "10",
@@ -163,6 +165,7 @@ func TestNewRootCommand_FlagsOverrideDefaults(t *testing.T) {
 	assert.Equal(t, "override", cfg.SourceDir)
 	assert.Equal(t, "overridden_target", cfg.TargetDir)
 	assert.Equal(t, os.FileMode(0o770), cfg.TargetDirPermissions)
+	assert.Equal(t, os.FileMode(0o660), cfg.TargetFilePermissions)
 	assert.Equal(t, os.FileMode(0o660), cfg.TextFilePermissions)
 
 	assert.Equal(t, 10, cfg.MaxFlattenerWorkers)

@@ -2,6 +2,7 @@
   "source_dir": ".",
   "target_dir": "./_ccmb_output",
   "target_dir_permissions": 448,
+  "target_file_permissions": 384,
   "text_file_permissions": 384,
 
   "max_flattener_workers": 8,

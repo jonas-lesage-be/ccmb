@@ -7,6 +7,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"ccmb/internal/media"
 )
 
 func (c *Converter) convert(ctx context.Context, name, path, mimeType string) error {
@@ -24,13 +26,7 @@ func (c *Converter) convert(ctx context.Context, name, path, mimeType string) er
 		return c.convertSVGToPNG(path, outputPath)
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, c.Timeout)
-	defer cancel()
-
-	//nolint:gosec
-	cmd := exec.CommandContext(
-		ctx,
-		"ffmpeg",
+	args := []string{
 		// Use hardware acceleration if available.
 		"-hwaccel", "auto",
 		// Input file.
@@ -43,10 +39,10 @@ func (c *Converter) convert(ctx context.Context, name, path, mimeType string) er
 		"-y",
 		// Output file.
 		outputPath,
-	)
+	}
 
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to run ffmpeg command: %w", err)
+	if err := media.RunFFmpegCommand(ctx, c.Timeout, args...); err != nil {
+		return fmt.Errorf("failed to convert image: %w", err)
 	}
 
 	return nil

@@ -18,12 +18,14 @@ import (
 
 // Converter is responsible for converting image files.
 type Converter struct {
-	Dir string
+	Dir             string
+	FilePermissions os.FileMode
 
 	MaxWorkers          int
 	Timeout             time.Duration
 	SvgCanvasResolution float64
 
+	FlatPathDelimiter        string
 	ImageExtensions          map[string]bool
 	SupportedImageExtensions map[string]bool
 }
@@ -36,12 +38,14 @@ type job struct {
 // NewConverter creates a new instance of Converter using the application configuration.
 func NewConverter(cfg *config.Config) *Converter {
 	return &Converter{
-		Dir: cfg.TargetDir,
+		Dir:             cfg.TargetDir,
+		FilePermissions: cfg.TargetFilePermissions,
 
 		MaxWorkers:          cfg.MaxImageWorkers,
 		Timeout:             cfg.ImageConversionTimeout,
 		SvgCanvasResolution: cfg.SvgCanvasResolution,
 
+		FlatPathDelimiter:        cfg.FlatPathDelimiter,
 		ImageExtensions:          cfg.ImageExtensions,
 		SupportedImageExtensions: cfg.SupportedImageExtensions,
 	}
@@ -96,10 +100,6 @@ func (c *Converter) filterFiles(files []os.DirEntry) []job {
 			continue
 		}
 
-		if c.ImageExtensions == nil && ext == ".gif" {
-			continue
-		}
-
 		jobs = append(jobs, job{
 			name: name,
 			path: filepath.Join(c.Dir, name),
@@ -115,6 +115,13 @@ func (c *Converter) processJob(ctx context.Context, j job) error {
 		return fmt.Errorf("failed to detect content type: %w", err)
 	}
 	mimeType := mtype.String()
+
+	if mimeType == "image/gif" {
+		if err := c.processGif(j.path, j.name); err != nil {
+			return fmt.Errorf("error processing GIF %s: %w", j.name, err)
+		}
+		return nil
+	}
 
 	isSingleFrameImage, err := c.isSingleFrameImage(ctx, j.path, mimeType)
 	if err != nil {
@@ -139,10 +146,6 @@ func (c *Converter) isSingleFrameImage(ctx context.Context, path, mimeType strin
 
 	if strings.HasPrefix(mimeType, "image/svg") {
 		return true, nil
-	}
-
-	if strings.HasPrefix(mimeType, "image/gif") {
-		return false, nil
 	}
 
 	frameType, err := media.ProbeFrameType(ctx, path, c.Timeout)

@@ -1,6 +1,7 @@
 source_dir: "."
 target_dir: "./_ccmb_output"
 target_dir_permissions: 0o700
+target_file_permissions: 0o600
 text_file_permissions: 0o600
 
 max_flattener_workers: 8

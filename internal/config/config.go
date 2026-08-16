@@ -11,10 +11,11 @@ import (
 
 // Config holds the configuration settings for the application.
 type Config struct {
-	SourceDir            string      `mapstructure:"source_dir"`
-	TargetDir            string      `mapstructure:"target_dir"`
-	TargetDirPermissions os.FileMode `mapstructure:"target_dir_permissions"`
-	TextFilePermissions  os.FileMode `mapstructure:"text_file_permissions"`
+	SourceDir             string      `mapstructure:"source_dir"`
+	TargetDir             string      `mapstructure:"target_dir"`
+	TargetDirPermissions  os.FileMode `mapstructure:"target_dir_permissions"`
+	TargetFilePermissions os.FileMode `mapstructure:"target_file_permissions"`
+	TextFilePermissions   os.FileMode `mapstructure:"text_file_permissions"`
 
 	MaxFlattenerWorkers    int           `mapstructure:"max_flattener_workers"`
 	MaxDocumentWorkers     int           `mapstructure:"max_document_workers"`
@@ -56,10 +57,11 @@ type Config struct {
 }
 
 const (
-	defaultSourceDir                        = "."
-	defaultTargetDir                        = "./_ccmb_output"
-	defaultTargetDirPermissions os.FileMode = 0o700
-	defaultTextFilePermissions  os.FileMode = 0o600
+	defaultSourceDir                         = "."
+	defaultTargetDir                         = "./_ccmb_output"
+	defaultTargetDirPermissions  os.FileMode = 0o700
+	defaultTargetFilePermissions os.FileMode = 0o600
+	defaultTextFilePermissions   os.FileMode = 0o600
 
 	defaultMaxFlattenerWorkers    = 8
 	defaultMaxDocumentWorkers     = 8

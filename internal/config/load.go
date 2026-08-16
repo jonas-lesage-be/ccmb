@@ -25,6 +25,7 @@ func NewViper() *viper.Viper {
 	v.SetDefault("source_dir", defaultSourceDir)
 	v.SetDefault("target_dir", defaultTargetDir)
 	v.SetDefault("target_dir_permissions", defaultTargetDirPermissions)
+	v.SetDefault("target_file_permissions", defaultTargetFilePermissions)
 	v.SetDefault("text_file_permissions", defaultTextFilePermissions)
 
 	v.SetDefault("max_flattener_workers", defaultMaxFlattenerWorkers)
