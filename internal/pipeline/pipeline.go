@@ -3,8 +3,10 @@ package pipeline
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"time"
 
 	"ccmb/internal/config"
@@ -115,14 +117,25 @@ func (p *Pipeline) Execute(ctx context.Context) error {
 	tmpCfg := *p.cfg
 	tmpCfg.TargetDir = tmpDir
 
+	stepSkipped := false
 	for _, step := range p.steps {
 		if step.ShouldSkip(p.cfg) {
+			stepSkipped = true
 			continue
 		}
 
 		if err := p.executeStep(ctx, step, &tmpCfg, tmpDir); err != nil {
 			return err
 		}
+	}
+
+	if !stepSkipped {
+		return nil
+	}
+
+	slog.Info("Copying files from temporary directory to target directory")
+	if err := p.flushTmpDirToTarget(tmpDir); err != nil {
+		return fmt.Errorf("failed to flush to target directory: %w", err)
 	}
 
 	slog.Info("Pipeline execution successfully completed", "duration", time.Since(startTime))
@@ -169,6 +182,61 @@ func (p *Pipeline) executeStep(
 	}
 
 	logger.Info("Step completed successfully", "duration", time.Since(startTime))
+
+	return nil
+}
+
+func (p *Pipeline) flushTmpDirToTarget(tmpDir string) error {
+	entries, err := os.ReadDir(tmpDir)
+	if err != nil {
+		return fmt.Errorf("failed to read temporary directory: %w", err)
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+
+		name := entry.Name()
+		srcPath := filepath.Join(tmpDir, name)
+		dstPath := filepath.Join(p.cfg.TargetDir, name)
+
+		if err := p.copyFile(srcPath, dstPath); err != nil {
+			return fmt.Errorf("failed to flush %s: %w", name, err)
+		}
+	}
+
+	return nil
+}
+
+func (p *Pipeline) copyFile(src, dst string) error {
+	in, err := os.Open(filepath.Clean(src))
+	if err != nil {
+		return fmt.Errorf("failed to open source file %s: %w", src, err)
+	}
+	defer func() {
+		if err := in.Close(); err != nil {
+			slog.Error("Failed to close source file", "err", err)
+		}
+	}()
+
+	out, err := os.OpenFile(
+		filepath.Clean(dst),
+		os.O_CREATE|os.O_TRUNC|os.O_WRONLY,
+		p.cfg.TargetFilePermissions,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to open destination file %s: %w", dst, err)
+	}
+	defer func() {
+		if err := out.Close(); err != nil {
+			slog.Error("Failed to close destination file", "err", err)
+		}
+	}()
+
+	if _, err = io.Copy(out, in); err != nil {
+		return fmt.Errorf("failed to copy file from %s to %s: %w", src, dst, err)
+	}
 
 	return nil
 }
