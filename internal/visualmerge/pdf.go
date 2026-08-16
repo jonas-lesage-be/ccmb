@@ -65,22 +65,12 @@ func (m *Merger) convertToHeaderedPDF(ctx context.Context, j job) (string, error
 }
 
 func (m *Merger) createWatermark(flatName, ext string) (*pdfcpu_model.Watermark, error) {
-	originalPath := config.DecodeFlatName(
-		flatName,
-		m.EscapedDelimiter,
-		m.DecodePlaceholder,
-		m.FlatPathDelimiter,
-	)
+	originalPath := m.originalPathFromFlatName(flatName)
 	headerText := "File path: " + originalPath
 
 	if strings.Contains(flatName, m.FlatPathDelimiter+"frame_") {
 		before, after, _ := strings.Cut(flatName, m.FlatPathDelimiter+"frame_")
-		cleanPath := config.DecodeFlatName(
-			before,
-			m.EscapedDelimiter,
-			m.DecodePlaceholder,
-			m.FlatPathDelimiter,
-		)
+		cleanPath := m.originalPathFromFlatName(before)
 		frameNum := strings.TrimSuffix(after, ext)
 		headerText = fmt.Sprintf("File path: %s frame number %s", cleanPath, frameNum)
 	}
@@ -115,6 +105,15 @@ func (m *Merger) mergeBatch(files []string, counter int) error {
 	}
 
 	return nil
+}
+
+func (m *Merger) originalPathFromFlatName(flatName string) string {
+	return config.DecodeFlatName(
+		flatName,
+		m.EscapedDelimiter,
+		m.DecodePlaceholder,
+		m.FlatPathDelimiter,
+	)
 }
 
 func importImageWithWatermark(srcPath, outPDF, flatName string, wm *pdfcpu_model.Watermark) error {

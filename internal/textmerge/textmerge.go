@@ -74,7 +74,7 @@ func (m *Merger) processFiles(
 ) ([]string, []error) {
 	var batch []string
 	var errs []error
-	var currentBuilder strings.Builder
+	var builder strings.Builder
 
 	partCounter := 1
 
@@ -106,34 +106,24 @@ func (m *Merger) processFiles(
 			continue
 		}
 
-		originalPath := config.DecodeFlatName(
-			name,
-			m.EscapedDelimiter,
-			m.DecodePlaceholder,
-			m.FlatPathDelimiter,
-		)
+		originalPath := m.originalPathFromFlatName(name)
+		builderLen := int64(builder.Len())
+		expectedLen := builderLen + m.writeFileLen(originalPath, content)
 
-		headerLength := len("<file path=\"") + len(originalPath) + len("\">\n")
-		footerLength := len("\n</file>\n\n")
-		totalBlockSize := int64(headerLength + len(content) + footerLength)
-
-		if int64(currentBuilder.Len())+totalBlockSize > m.MaxTextFileBytes &&
-			currentBuilder.Len() > 0 {
-			m.flush(&currentBuilder, partCounter, &errs)
+		if expectedLen > m.MaxTextFileBytes && builderLen > 0 {
+			m.flush(&builder, partCounter, &errs)
 			partCounter++
 		}
 
 		batch = append(batch, path)
 
-		currentBuilder.WriteString("<file path=\"")
-		currentBuilder.WriteString(originalPath)
-		currentBuilder.WriteString("\">\n")
-		currentBuilder.Write(content)
-		currentBuilder.WriteString("\n</file>\n\n")
+		if _, err := m.writeFile(&builder, originalPath, content); err != nil {
+			errs = append(errs, fmt.Errorf("failed to write file %s: %w", name, err))
+		}
 	}
 
 	if ctx.Err() == nil {
-		m.flush(&currentBuilder, partCounter, &errs)
+		m.flush(&builder, partCounter, &errs)
 	}
 
 	return batch, errs
@@ -141,6 +131,57 @@ func (m *Merger) processFiles(
 
 func (m *Merger) shouldSkip(file os.DirEntry) bool {
 	return file.IsDir() || strings.HasPrefix(file.Name(), "FinalResult_")
+}
+
+func (m *Merger) originalPathFromFlatName(flatName string) string {
+	return config.DecodeFlatName(
+		flatName,
+		m.EscapedDelimiter,
+		m.DecodePlaceholder,
+		m.FlatPathDelimiter,
+	)
+}
+
+func (m *Merger) writeFileLen(path string, data []byte) int64 {
+	headerLength := len("<file path=\"") + len(path) + len("\">\n")
+	footerLength := len("\n</file>\n\n")
+	return int64(headerLength + len(data) + footerLength)
+}
+
+func (m *Merger) writeFile(builder *strings.Builder, path string, data []byte) (int, error) {
+	totalWritten := 0
+
+	currentWritten, err := builder.WriteString("<file path=\"")
+	if err != nil {
+		return totalWritten, fmt.Errorf("failed to write file path to builder: %w", err)
+	}
+	totalWritten += currentWritten
+
+	currentWritten, err = builder.WriteString(path)
+	if err != nil {
+		return totalWritten, fmt.Errorf("failed to write file path to builder: %w", err)
+	}
+	totalWritten += currentWritten
+
+	currentWritten, err = builder.WriteString("\">\n")
+	if err != nil {
+		return totalWritten, fmt.Errorf("failed to write file header to builder: %w", err)
+	}
+	totalWritten += currentWritten
+
+	currentWritten, err = builder.Write(data)
+	if err != nil {
+		return totalWritten, fmt.Errorf("failed to write file content to builder: %w", err)
+	}
+	totalWritten += currentWritten
+
+	currentWritten, err = builder.WriteString("\n</file>\n\n")
+	if err != nil {
+		return totalWritten, fmt.Errorf("failed to write file footer to builder: %w", err)
+	}
+	totalWritten += currentWritten
+
+	return totalWritten, nil
 }
 
 func (m *Merger) flush(b *strings.Builder, counter int, errs *[]error) {
