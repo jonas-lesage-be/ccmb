@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	pdfcpu_api "github.com/pdfcpu/pdfcpu/pkg/api"
@@ -65,20 +66,10 @@ func (m *Merger) convertToHeaderedPDF(ctx context.Context, j job) (string, error
 }
 
 func (m *Merger) createWatermark(flatName, ext string) (*pdfcpu_model.Watermark, error) {
-	originalPath := m.originalPathFromFlatName(flatName)
-	headerText := "File path: " + originalPath
-
-	if strings.Contains(flatName, m.FlatPathDelimiter+"frame_") {
-		before, after, _ := strings.Cut(flatName, m.FlatPathDelimiter+"frame_")
-		cleanPath := m.originalPathFromFlatName(before)
-		frameNum := strings.TrimSuffix(after, ext)
-		headerText = fmt.Sprintf("File path: %s frame number %s", cleanPath, frameNum)
-	}
-
 	desc := "pos: tr, off: -6 -6, points: 10, scale: 1.0 abs, rot: 0, mode: 0," +
 		" color: #000000, bgcol: #ffffff, border: 1 #000000, margins: 4"
 	wm, err := pdfcpu.ParseTextWatermarkDetails(
-		headerText,
+		m.headerText(flatName, ext),
 		desc,
 		true,
 		pdfcpu_types.POINTS,
@@ -105,6 +96,21 @@ func (m *Merger) mergeBatch(files []string, counter int) error {
 	}
 
 	return nil
+}
+
+func (m *Merger) headerText(flatName, ext string) string {
+	if strings.Contains(flatName, m.FlatPathDelimiter+"frame_") {
+		before, after, _ := strings.Cut(flatName, m.FlatPathDelimiter+"frame_")
+		frameNum := strings.TrimSuffix(after, ext)
+
+		if _, err := strconv.Atoi(frameNum); err == nil {
+			cleanPath := m.originalPathFromFlatName(before)
+			return fmt.Sprintf("File path: %s frame number %s", cleanPath, frameNum)
+		}
+	}
+
+	originalPath := m.originalPathFromFlatName(flatName)
+	return "File path: " + originalPath
 }
 
 func (m *Merger) originalPathFromFlatName(flatName string) string {
