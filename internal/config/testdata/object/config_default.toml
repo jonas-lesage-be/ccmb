@@ -19,6 +19,8 @@ est_file_count = 128
 flat_path_delimiter = "--"
 escaped_delimiter = "----"
 decode_placeholder = "\u0000"
+visual_part_prefix = "visual-part-"
+text_part_prefix = "text-part-"
 
 max_archive_file_bytes = 4294967296
 max_pdf_file_bytes = 50331648

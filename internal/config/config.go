@@ -32,6 +32,8 @@ type Config struct {
 	FlatPathDelimiter string `mapstructure:"flat_path_delimiter"`
 	EscapedDelimiter  string `mapstructure:"escaped_delimiter"`
 	DecodePlaceholder string `mapstructure:"decode_placeholder"`
+	VisualPartPrefix  string `mapstructure:"visual_part_prefix"`
+	TextPartPrefix    string `mapstructure:"text_part_prefix"`
 
 	MaxArchiveFileBytes int64 `mapstructure:"max_archive_file_bytes"`
 	MaxPDFFileBytes     int64 `mapstructure:"max_pdf_file_bytes"`
@@ -77,6 +79,8 @@ const (
 	defaultEstFileCount      = 128
 	defaultFlatPathDelimiter = "--"
 	defaultDecodePlaceholder = "\x00"
+	defaultVisualPartPrefix  = "visual-part-"
+	defaultTextPartPrefix    = "text-part-"
 
 	defaultMaxArchiveFileBytes int64 = 4 * conv.GiB
 	defaultMaxPDFFileBytes     int64 = 48 * conv.MiB

@@ -82,7 +82,7 @@ func (m *Merger) createWatermark(flatName, ext string) (*pdfcpu_model.Watermark,
 }
 
 func (m *Merger) mergeBatch(files []string, counter int) error {
-	fname := fmt.Sprintf("FinalResult_Visual_Part_%d.pdf", counter)
+	fname := fmt.Sprintf("%s%d.pdf", m.VisualPartPrefix, counter)
 	fpath := filepath.Join(m.TargetDir, fname)
 	slog.Info("Flushing and writing structured batch out to file payload", "file", fname)
 

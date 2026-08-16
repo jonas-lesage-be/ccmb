@@ -23,6 +23,7 @@ type Merger struct {
 	FlatPathDelimiter string
 	EscapedDelimiter  string
 	DecodePlaceholder string
+	VisualPartPrefix  string
 
 	VisualExtensions map[string]bool
 }
@@ -48,6 +49,7 @@ func NewMerger(cfg *config.Config) *Merger {
 		FlatPathDelimiter: cfg.FlatPathDelimiter,
 		EscapedDelimiter:  cfg.EscapedDelimiter,
 		DecodePlaceholder: cfg.DecodePlaceholder,
+		VisualPartPrefix:  cfg.VisualPartPrefix,
 
 		VisualExtensions: cfg.VisualExtensions,
 	}

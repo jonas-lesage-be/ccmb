@@ -124,6 +124,8 @@ func bindFlags(cmd *cobra.Command, v *viper.Viper) error {
 	flags.String("flat-path-delimiter", "", "Delimiter used in flattened paths")
 	flags.String("escaped-delimiter", "", "Escaped flattened-path delimiter")
 	flags.String("decode-placeholder", "", "Temporary delimiter decoding placeholder")
+	flags.String("visual-part-prefix", "", "Prefix for visual part files")
+	flags.String("text-part-prefix", "", "Prefix for text part files")
 
 	flags.Int64("max-archive-file-bytes", 0, "Maximum archive size in bytes")
 	flags.Int64("max-pdf-file-bytes", 0, "Maximum PDF size in bytes")

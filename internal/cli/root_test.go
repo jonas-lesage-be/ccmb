@@ -55,6 +55,8 @@ func TestNewRootCommand_UsesDefaultsWithoutFlags(t *testing.T) {
 	assert.Equal(t, "--", cfg.FlatPathDelimiter)
 	assert.Equal(t, "----", cfg.EscapedDelimiter)
 	assert.Equal(t, "\x00", cfg.DecodePlaceholder)
+	assert.Equal(t, "visual-part-", cfg.VisualPartPrefix)
+	assert.Equal(t, "text-part-", cfg.TextPartPrefix)
 
 	assert.Equal(t, int64(4*conv.GiB), cfg.MaxArchiveFileBytes)
 	assert.Equal(t, int64(48*conv.MiB), cfg.MaxPDFFileBytes)
@@ -129,6 +131,8 @@ func TestNewRootCommand_FlagsOverrideDefaults(t *testing.T) {
 		"--flat-path-delimiter", "__",
 		"--escaped-delimiter", "____",
 		"--decode-placeholder", "\x00\x00",
+		"--visual-part-prefix", "vis-part-",
+		"--text-part-prefix", "txt-part-",
 
 		"--max-archive-file-bytes", "2147483648", // 2 * conv.GiB
 		"--max-pdf-file-bytes", "33554432", // 32 * conv.MiB
@@ -183,6 +187,8 @@ func TestNewRootCommand_FlagsOverrideDefaults(t *testing.T) {
 	assert.Equal(t, "__", cfg.FlatPathDelimiter)
 	assert.Equal(t, "____", cfg.EscapedDelimiter)
 	assert.Equal(t, "\x00\x00", cfg.DecodePlaceholder)
+	assert.Equal(t, "vis-part-", cfg.VisualPartPrefix)
+	assert.Equal(t, "txt-part-", cfg.TextPartPrefix)
 
 	assert.Equal(t, int64(2*conv.GiB), cfg.MaxArchiveFileBytes)
 	assert.Equal(t, int64(32*conv.MiB), cfg.MaxPDFFileBytes)

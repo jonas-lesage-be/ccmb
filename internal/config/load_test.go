@@ -62,6 +62,8 @@ func TestLoad_WithConfigFiles(t *testing.T) {
 			assert.Equal(t, "--", cfg.FlatPathDelimiter)
 			assert.Equal(t, "----", cfg.EscapedDelimiter)
 			assert.Equal(t, "\x00", cfg.DecodePlaceholder)
+			assert.Equal(t, "visual-part-", cfg.VisualPartPrefix)
+			assert.Equal(t, "text-part-", cfg.TextPartPrefix)
 
 			assert.Equal(t, int64(4294967296), cfg.MaxArchiveFileBytes)
 			assert.Equal(t, int64(50331648), cfg.MaxPDFFileBytes)
@@ -138,6 +140,8 @@ func TestLoad_UsesOverrides(t *testing.T) {
 	v.Set("flat_path_delimiter", "__")
 	v.Set("escaped_delimiter", "____")
 	v.Set("decode_placeholder", "\x00\x00")
+	v.Set("visual_part_prefix", "vis-part-")
+	v.Set("text_part_prefix", "txt-part-")
 
 	v.Set("max_archive_file_bytes", 2*conv.GiB)
 	v.Set("max_pdf_file_bytes", 32*conv.MiB)
@@ -184,6 +188,8 @@ func TestLoad_UsesOverrides(t *testing.T) {
 	assert.Equal(t, "__", cfg.FlatPathDelimiter)
 	assert.Equal(t, "____", cfg.EscapedDelimiter)
 	assert.Equal(t, "\x00\x00", cfg.DecodePlaceholder)
+	assert.Equal(t, "vis-part-", cfg.VisualPartPrefix)
+	assert.Equal(t, "txt-part-", cfg.TextPartPrefix)
 
 	assert.Equal(t, int64(2*conv.GiB), cfg.MaxArchiveFileBytes)
 	assert.Equal(t, int64(32*conv.MiB), cfg.MaxPDFFileBytes)

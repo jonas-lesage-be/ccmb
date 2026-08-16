@@ -18,6 +18,8 @@ type Merger struct {
 	TargetDir           string
 	TextFilePermissions os.FileMode
 
+	VisualPartPrefix string
+	TextPartPrefix   string
 	MaxTextFileBytes int64
 
 	FlatPathDelimiter string
@@ -34,6 +36,8 @@ func NewMerger(cfg *config.Config) *Merger {
 		TargetDir:           cfg.TargetDir,
 		TextFilePermissions: cfg.TextFilePermissions,
 
+		VisualPartPrefix: cfg.VisualPartPrefix,
+		TextPartPrefix:   cfg.TextPartPrefix,
 		MaxTextFileBytes: cfg.MaxTextFileBytes,
 
 		FlatPathDelimiter: cfg.FlatPathDelimiter,
@@ -130,7 +134,10 @@ func (m *Merger) processFiles(
 }
 
 func (m *Merger) shouldSkip(file os.DirEntry) bool {
-	return file.IsDir() || strings.HasPrefix(file.Name(), "FinalResult_")
+	name := file.Name()
+	return file.IsDir() ||
+		strings.HasPrefix(name, m.VisualPartPrefix) ||
+		strings.HasPrefix(name, m.TextPartPrefix)
 }
 
 func (m *Merger) originalPathFromFlatName(flatName string) string {
@@ -194,7 +201,7 @@ func (m *Merger) flush(b *strings.Builder, counter int, errs *[]error) {
 }
 
 func (m *Merger) writeTextPart(data string, counter int) error {
-	outputName := filepath.Join(m.TargetDir, fmt.Sprintf("FinalResult_Text_Part_%d.txt", counter))
+	outputName := filepath.Join(m.TargetDir, fmt.Sprintf("%s%d.txt", m.TextPartPrefix, counter))
 	slog.Info("Saving merged structural textual payload", "file", filepath.Base(outputName))
 
 	if err := os.WriteFile(outputName, []byte(data), m.TextFilePermissions); err != nil {

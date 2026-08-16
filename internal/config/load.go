@@ -43,6 +43,8 @@ func NewViper() *viper.Viper {
 	v.SetDefault("flat_path_delimiter", defaultFlatPathDelimiter)
 	v.SetDefault("escaped_delimiter", defaultFlatPathDelimiter+defaultFlatPathDelimiter)
 	v.SetDefault("decode_placeholder", defaultDecodePlaceholder)
+	v.SetDefault("visual_part_prefix", defaultVisualPartPrefix)
+	v.SetDefault("text_part_prefix", defaultTextPartPrefix)
 
 	v.SetDefault("max_archive_file_bytes", defaultMaxArchiveFileBytes)
 	v.SetDefault("max_pdf_file_bytes", defaultMaxPDFFileBytes)
