@@ -64,7 +64,6 @@ func (f *Flattener) handleTAR(ctx context.Context, path string, wrapReader wrapR
 	}
 
 	prefix := config.EncodeFlatName(relPath, f.FlatPathDelimiter, f.EscapedDelimiter)
-	prefix = strings.TrimSuffix(prefix, ext)
 
 	return f.processTARStream(ctx, decompressor, path, prefix, ext)
 }

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log/slog"
 	"path/filepath"
-	"strings"
 
 	kzip "github.com/klauspost/compress/zip"
 
@@ -32,8 +31,7 @@ func (f *Flattener) handleZIP(ctx context.Context, zipPath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to get relative zip path: %w", err)
 	}
-	zipPrefix := config.EncodeFlatName(relZIP, f.FlatPathDelimiter, f.EscapedDelimiter)
-	zipPrefix = strings.TrimSuffix(zipPrefix, filepath.Ext(zipPrefix))
+	prefix := config.EncodeFlatName(relZIP, f.FlatPathDelimiter, f.EscapedDelimiter)
 
 	for _, file := range rc.File {
 		if err := ctx.Err(); err != nil {
@@ -45,7 +43,7 @@ func (f *Flattener) handleZIP(ctx context.Context, zipPath string) error {
 		}
 
 		memberFlatName := config.EncodeFlatName(file.Name, f.FlatPathDelimiter, f.EscapedDelimiter)
-		finalFlatName := fmt.Sprintf("%s%s%s", zipPrefix, f.FlatPathDelimiter, memberFlatName)
+		finalFlatName := fmt.Sprintf("%s%s%s", prefix, f.FlatPathDelimiter, memberFlatName)
 		targetPath := filepath.Join(f.TargetDir, finalFlatName)
 
 		if err := f.extractZIPMember(ctx, file, targetPath); err != nil {
