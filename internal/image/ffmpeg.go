@@ -16,7 +16,7 @@ func (c *Converter) convert(ctx context.Context, name, path, mimeType string) er
 		return fmt.Errorf("ffmpeg is not installed or not found in PATH: %w", err)
 	}
 
-	outputPath := filepath.Join(c.Dir, name+".png")
+	outputPath := filepath.Join(c.Dir, name+c.FlatPathDelimiter+".png")
 
 	slog.Debug("Converting unsupported image to PNG", "file", name)
 

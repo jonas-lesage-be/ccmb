@@ -53,7 +53,7 @@ func (c *Converter) processGif(srcPath, name string) error {
 
 func (c *Converter) resolveFrameName(name string, frameCount, index int) string {
 	if frameCount == 1 {
-		return name + ".png"
+		return name + c.FlatPathDelimiter + ".png"
 	}
 	return fmt.Sprintf("%s%sframe_%d.png", name, c.FlatPathDelimiter, index)
 }

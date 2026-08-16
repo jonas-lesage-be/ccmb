@@ -109,6 +109,12 @@ func (m *Merger) headerText(flatName, ext string) string {
 		}
 	}
 
+	targetSuffix := m.FlatPathDelimiter + ".png"
+	if before, ok := strings.CutSuffix(flatName, targetSuffix); before != "" && ok {
+		originalPath := m.originalPathFromFlatName(before)
+		return "File path: " + originalPath
+	}
+
 	originalPath := m.originalPathFromFlatName(flatName)
 	return "File path: " + originalPath
 }
