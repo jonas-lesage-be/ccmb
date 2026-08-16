@@ -88,12 +88,21 @@ func TestLoad_WithConfigFiles(t *testing.T) {
 			}
 
 			expectedDocumentExtensions := []string{
+				".csv",
+				".odt",
+				".ods",
+				".odp",
+				".epub",
+				".rtf",
 				".doc",
 				".docx",
 				".docm",
-				".odt",
-				".epub",
-				".rtf",
+				".xls",
+				".xlsx",
+				".xlsm",
+				".ppt",
+				".pptx",
+				".pptm",
 			}
 			for _, ext := range expectedDocumentExtensions {
 				assert.True(t, cfg.DocumentExtensions[ext])

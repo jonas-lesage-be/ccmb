@@ -28,7 +28,7 @@
   "max_text_file_bytes": 2097152,
 
   "filter_extensions": null,
-  "document_extensions": ".doc, .docx, .docm, .odt, .epub, .rtf",
+  "document_extensions": ".csv,.odt,.ods,.odp,.epub,.rtf,.doc,.docx,.docm,.xls,.xlsx,.xlsm,.ppt,.pptx,.pptm",
   "image_extensions": null,
   "supported_image_extensions": ".jpg, .jpeg, .png, .webp, .tif, .tiff",
   "video_extensions": null,

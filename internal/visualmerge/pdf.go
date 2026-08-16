@@ -51,13 +51,11 @@ func (m *Merger) convertToHeaderedPDF(ctx context.Context, j job) (string, error
 	}
 
 	if ext == ".pdf" {
-		err = pdfcpu_api.AddWatermarksFile(j.path, outPDF, nil, wm, nil)
-		if err != nil {
+		if err := pdfcpu_api.AddWatermarksFile(j.path, outPDF, nil, wm, nil); err != nil {
 			return "", fmt.Errorf("failed to add watermark to PDF %s: %w", j.name, err)
 		}
 	} else {
-		err = importImageWithWatermark(j.path, outPDF, j.name, wm)
-		if err != nil {
+		if err := importImageWithWatermark(j.path, outPDF, j.name, wm); err != nil {
 			return "", fmt.Errorf("failed to import image with watermark: %w", err)
 		}
 	}

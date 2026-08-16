@@ -31,6 +31,10 @@
     "ui.diagnostic.staticcheck": true
   },
 
+  "[toml]": {
+    "editor.defaultFormatter": "tamasfe.even-better-toml"
+  },
+
   "yaml.schemas": {
     "https://golangci-lint.run/jsonschema/golangci.jsonschema.json": "${workspaceFolder}/.golangci.yml"
   }

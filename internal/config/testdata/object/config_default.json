@@ -29,12 +29,21 @@
 
   "filter_extensions": null,
   "document_extensions": {
+    ".csv": true,
+    ".odt": true,
+    ".ods": true,
+    ".odp": true,
+    ".epub": true,
+    ".rtf": true,
     ".doc": true,
     ".docx": true,
     ".docm": true,
-    ".odt": true,
-    ".epub": true,
-    ".rtf": true
+    ".xls": true,
+    ".xlsx": true,
+    ".xlsm": true,
+    ".ppt": true,
+    ".pptx": true,
+    ".pptm": true
   },
   "image_extensions": null,
   "supported_image_extensions": {

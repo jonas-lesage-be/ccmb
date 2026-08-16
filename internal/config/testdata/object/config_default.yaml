@@ -31,12 +31,21 @@ image_extensions: ~
 video_extensions: ~
 
 document_extensions:
+  ".csv": true
+  ".odt": true
+  ".ods": true
+  ".odp": true
+  ".epub": true
+  ".rtf": true
   ".doc": true
   ".docx": true
   ".docm": true
-  ".odt": true
-  ".epub": true
-  ".rtf": true
+  ".xls": true
+  ".xlsx": true
+  ".xlsm": true
+  ".ppt": true
+  ".pptx": true
+  ".pptm": true
 
 supported_image_extensions:
   ".jpg": true

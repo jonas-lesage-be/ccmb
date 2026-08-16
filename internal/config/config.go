@@ -86,7 +86,8 @@ const (
 	defaultMaxPDFFileBytes     int64 = 48 * conv.MiB
 	defaultMaxTextFileBytes    int64 = 2 * conv.MiB
 
-	defaultDocumentExtensions       = ".doc,.docx,.docm,.odt,.epub,.rtf"
+	microsoftOfficeExtensions       = ".doc,.docx,.docm,.xls,.xlsx,.xlsm,.ppt,.pptx,.pptm"
+	defaultDocumentExtensions       = ".csv,.odt,.ods,.odp,.epub,.rtf," + microsoftOfficeExtensions
 	defaultImageExtensions          = "nil"
 	defaultSupportedImageExtensions = ".jpg,.jpeg,.png,.webp,.tif,.tiff"
 	defaultVideoExtensions          = "nil"

@@ -62,6 +62,30 @@ func TestNewRootCommand_UsesDefaultsWithoutFlags(t *testing.T) {
 	assert.Equal(t, int64(48*conv.MiB), cfg.MaxPDFFileBytes)
 	assert.Equal(t, int64(2*conv.MiB), cfg.MaxTextFileBytes)
 
+	assert.Nil(t, cfg.ImageExtensions)
+	assert.Nil(t, cfg.VideoExtensions)
+
+	expectedDocumentExtensions := []string{
+		".csv",
+		".odt",
+		".ods",
+		".odp",
+		".epub",
+		".rtf",
+		".doc",
+		".docx",
+		".docm",
+		".xls",
+		".xlsx",
+		".xlsm",
+		".ppt",
+		".pptx",
+		".pptm",
+	}
+	for _, ext := range expectedDocumentExtensions {
+		assert.True(t, cfg.DocumentExtensions[ext])
+	}
+
 	expectedFilterExtensions := []string{".ttf", ".woff", ".woff2"}
 	if config.IsWindows {
 		expectedFilterExtensions = append(
@@ -80,9 +104,6 @@ func TestNewRootCommand_UsesDefaultsWithoutFlags(t *testing.T) {
 	for _, ext := range expectedFilterExtensions {
 		assert.True(t, cfg.FilterExtensions[ext])
 	}
-
-	assert.Nil(t, cfg.ImageExtensions)
-	assert.Nil(t, cfg.VideoExtensions)
 
 	expectedSupportedExtensions := []string{".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff"}
 	for _, ext := range expectedSupportedExtensions {
