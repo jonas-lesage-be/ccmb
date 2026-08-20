@@ -146,9 +146,10 @@ func (f *Flattener) processFile(ctx context.Context, path string) error {
 		return fmt.Errorf("context error while processing file %s: %w", path, err)
 	}
 
+	filename := filepath.Base(path)
 	ext := Extension(path)
 	if f.FilterExtensions[ext] {
-		slog.Debug("Skipping filtered file", "file", filepath.Base(path), "extension", ext)
+		slog.Debug("Skipping filtered file", "file", filename, "extension", ext)
 		return nil
 	}
 
@@ -156,7 +157,7 @@ func (f *Flattener) processFile(ctx context.Context, path string) error {
 	handler := f.handlerForExtension(ext)
 
 	if handler != nil {
-		slog.Debug("Archive found, extracting", "type", displayExt, "file", filepath.Base(path))
+		slog.Debug("Archive found, extracting", "type", displayExt, "file", filename)
 		if err := handler(ctx, path); err != nil {
 			return fmt.Errorf("error processing %s %s: %w", displayExt, path, err)
 		}

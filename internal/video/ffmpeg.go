@@ -15,10 +15,10 @@ func (e *Extractor) extractFrames(ctx context.Context, path string) error {
 		return fmt.Errorf("ffmpeg is not installed or not found in PATH: %w", err)
 	}
 
-	baseName := filepath.Base(path)
-	outputPattern := filepath.Join(e.Dir, baseName+e.FlatPathDelimiter+"frame_%d.jpg")
+	filename := filepath.Base(path)
+	outputPattern := filepath.Join(e.Dir, filename+e.FlatPathDelimiter+"frame_%d.jpg")
 
-	slog.Debug("Running FFmpeg to extract frames", "file", filepath.Base(path))
+	slog.Debug("Running FFmpeg to extract frames", "file", filename)
 
 	fpsArg := fmt.Sprintf("fps=%g", e.Fps)
 	args := []string{

@@ -97,24 +97,24 @@ func (m *Merger) mergeBatch(files []string, counter int) error {
 }
 
 func (m *Merger) headerText(flatName, ext string) string {
-	if strings.Contains(flatName, m.FlatPathDelimiter+"frame_") {
-		before, after, _ := strings.Cut(flatName, m.FlatPathDelimiter+"frame_")
+	frameMarker := m.FlatPathDelimiter + "frame_"
+	if before, after, found := strings.Cut(flatName, frameMarker); found {
 		frameNum := strings.TrimSuffix(after, ext)
-
 		if _, err := strconv.Atoi(frameNum); err == nil {
 			cleanPath := m.originalPathFromFlatName(before)
 			return fmt.Sprintf("File path: %s frame number %s", cleanPath, frameNum)
 		}
 	}
 
-	targetSuffix := m.FlatPathDelimiter + ".png"
-	if before, ok := strings.CutSuffix(flatName, targetSuffix); before != "" && ok {
-		originalPath := m.originalPathFromFlatName(before)
-		return "File path: " + originalPath
+	cleanFlatName := flatName
+	if lastIdx := strings.LastIndex(flatName, m.FlatPathDelimiter); lastIdx != -1 {
+		lastSegment := flatName[lastIdx+len(m.FlatPathDelimiter):]
+		if strings.HasPrefix(lastSegment, ".") {
+			cleanFlatName = flatName[:lastIdx]
+		}
 	}
 
-	originalPath := m.originalPathFromFlatName(flatName)
-	return "File path: " + originalPath
+	return "File path: " + m.originalPathFromFlatName(cleanFlatName)
 }
 
 func (m *Merger) originalPathFromFlatName(flatName string) string {

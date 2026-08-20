@@ -34,7 +34,7 @@ func NewConverter(cfg *config.Config) *Converter {
 	return &Converter{
 		Dir:                 cfg.TargetDir,
 		TextFilePermissions: cfg.TextFilePermissions,
-		MaxWorkers:          cfg.MaxImageWorkers,
+		MaxWorkers:          cfg.MaxDocumentWorkers,
 
 		FlatPathDelimiter:  cfg.FlatPathDelimiter,
 		DocumentExtensions: cfg.DocumentExtensions,
@@ -144,7 +144,7 @@ func (c *Converter) flattenPandocMedia(docMediaDir, baseName string) (map[string
 			return nil
 		}
 
-		safeFilename := filepath.Base(path)
+		filename := filepath.Base(path)
 
 		relPath, err := filepath.Rel(cleanMediaDir, path)
 		if err != nil {
@@ -152,7 +152,7 @@ func (c *Converter) flattenPandocMedia(docMediaDir, baseName string) (map[string
 		}
 		pandocReference := filepath.Base(cleanMediaDir) + "/" + filepath.ToSlash(relPath)
 
-		flattenedImageName := fmt.Sprintf("%s%s%s", baseName, c.FlatPathDelimiter, safeFilename)
+		flattenedImageName := fmt.Sprintf("%s%s%s", baseName, c.FlatPathDelimiter, filename)
 		newHomePath := filepath.Join(c.Dir, flattenedImageName)
 
 		if err := os.Rename(path, newHomePath); err != nil {
