@@ -127,10 +127,10 @@ func (c *Converter) prependHeader(filePath, docName string) error {
 	return nil
 }
 
-func (c *Converter) flattenPandocMedia(docMediaDir, baseName string) (map[string]string, error) {
+func (c *Converter) flattenPandocMedia(mediaDir, baseName string) (map[string]string, error) {
 	mappings := make(map[string]string)
 
-	cleanMediaDir := filepath.Clean(docMediaDir)
+	cleanMediaDir := filepath.Clean(mediaDir)
 	if _, err := os.Stat(cleanMediaDir); os.IsNotExist(err) {
 		return mappings, nil
 	}

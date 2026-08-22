@@ -48,7 +48,7 @@ func (c *Converter) runPandocConversion(
 	fromFormat := strings.TrimPrefix(ext, ".")
 	cleanFlatName, outputName := c.derivePandocNames(filename, originalFilename)
 	outputPath := filepath.Join(c.Dir, outputName)
-	docMediaDir := filepath.Join(c.Dir, "pandoc_tmp_"+strings.TrimSuffix(filename, ext))
+	mediaDir := filepath.Join(c.Dir, "pandoc_tmp_"+strings.TrimSuffix(filename, ext))
 
 	args := []string{
 		srcPath,
@@ -59,7 +59,7 @@ func (c *Converter) runPandocConversion(
 
 	isExtractable := isExtractableMediaFile(ext)
 	if isExtractable {
-		args = append(args, "--extract-media="+docMediaDir)
+		args = append(args, "--extract-media="+mediaDir)
 	}
 
 	//nolint:gosec
@@ -69,7 +69,7 @@ func (c *Converter) runPandocConversion(
 	}
 
 	if isExtractable {
-		if err := c.handleMediaExtraction(docMediaDir, cleanFlatName, outputPath); err != nil {
+		if err := c.handleMediaExtraction(mediaDir, cleanFlatName, outputPath); err != nil {
 			return fmt.Errorf("failed to handle media extraction: %w", err)
 		}
 	}
@@ -97,8 +97,8 @@ func (c *Converter) derivePandocNames(flatName, originalFilename string) (string
 	return cleanFlatName, originalFilename + c.FlatPathDelimiter + ".md"
 }
 
-func (c *Converter) handleMediaExtraction(docMediaDir, baseName, markdownPath string) error {
-	mediaMappings, err := c.flattenPandocMedia(docMediaDir, baseName)
+func (c *Converter) handleMediaExtraction(mediaDir, baseName, markdownPath string) error {
+	mediaMappings, err := c.flattenPandocMedia(mediaDir, baseName)
 	if err != nil {
 		return fmt.Errorf("failed to flatten extracted document media: %w", err)
 	}

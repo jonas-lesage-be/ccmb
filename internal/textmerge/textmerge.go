@@ -138,8 +138,16 @@ func (m *Merger) shouldSkip(file os.DirEntry) bool {
 }
 
 func (m *Merger) originalPathFromFlatName(flatName string) string {
+	cleanFlatName := flatName
+	if lastIdx := strings.LastIndex(flatName, m.FlatPathDelimiter); lastIdx != -1 {
+		lastSegment := flatName[lastIdx+len(m.FlatPathDelimiter):]
+		if strings.HasPrefix(lastSegment, ".") {
+			cleanFlatName = flatName[:lastIdx]
+		}
+	}
+
 	return config.DecodeFlatName(
-		flatName,
+		cleanFlatName,
 		m.EscapedDelimiter,
 		m.DecodePlaceholder,
 		m.FlatPathDelimiter,
