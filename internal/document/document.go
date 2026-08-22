@@ -21,6 +21,8 @@ type Converter struct {
 	MaxWorkers          int
 
 	FlatPathDelimiter  string
+	EscapedDelimiter  string
+	DecodePlaceholder string
 	DocumentExtensions map[string]bool
 }
 
@@ -37,6 +39,8 @@ func NewConverter(cfg *config.Config) *Converter {
 		MaxWorkers:          cfg.MaxDocumentWorkers,
 
 		FlatPathDelimiter:  cfg.FlatPathDelimiter,
+		EscapedDelimiter:  cfg.EscapedDelimiter,
+		DecodePlaceholder: cfg.DecodePlaceholder,
 		DocumentExtensions: cfg.DocumentExtensions,
 	}
 }
@@ -107,26 +111,6 @@ func (c *Converter) processJob(ctx context.Context, j job) error {
 	return nil
 }
 
-func (c *Converter) prependHeader(filePath, docName string) error {
-	cleanPath := filepath.Clean(filePath)
-	content, err := os.ReadFile(cleanPath)
-	if err != nil {
-		return fmt.Errorf("failed to read markdown file %s: %w", cleanPath, err)
-	}
-
-	header := fmt.Sprintf("# Document Source: %s\n\n", docName)
-	newContent := make([]byte, 0, len(header)+len(content))
-	newContent = append(newContent, header...)
-	newContent = append(newContent, content...)
-
-	//nolint:gosec
-	if err := os.WriteFile(cleanPath, newContent, c.TextFilePermissions); err != nil {
-		return fmt.Errorf("failed to write markdown file %s: %w", cleanPath, err)
-	}
-
-	return nil
-}
-
 func (c *Converter) flattenPandocMedia(mediaDir, baseName string) (map[string]string, error) {
 	mappings := make(map[string]string)
 
@@ -150,7 +134,7 @@ func (c *Converter) flattenPandocMedia(mediaDir, baseName string) (map[string]st
 		if err != nil {
 			return fmt.Errorf("failed to determine relative path for %s: %w", path, err)
 		}
-		pandocReference := filepath.Base(cleanMediaDir) + "/" + filepath.ToSlash(relPath)
+		pandocReference := cleanMediaDir + "/" + filepath.ToSlash(relPath)
 
 		flattenedImageName := fmt.Sprintf("%s%s%s", baseName, c.FlatPathDelimiter, filename)
 		newHomePath := filepath.Join(c.Dir, flattenedImageName)
@@ -187,8 +171,9 @@ func (c *Converter) fixMarkdownImageLinks(markdownPath string, mappings map[stri
 
 	const pairCount = 2
 	replacements := make([]string, 0, len(mappings)*pairCount)
-	for oldPath, newFileName := range mappings {
-		replacements = append(replacements, oldPath, newFileName)
+	for oldPath, flatName := range mappings {
+		name := c.originalPathFromFlatName(flatName)
+		replacements = append(replacements, oldPath, name)
 	}
 
 	replacer := strings.NewReplacer(replacements...)
@@ -200,4 +185,14 @@ func (c *Converter) fixMarkdownImageLinks(markdownPath string, mappings map[stri
 	}
 
 	return nil
+}
+
+
+func (c *Converter) originalPathFromFlatName(flatName string) string {
+	return config.DecodeFlatName(
+		flatName,
+		c.EscapedDelimiter,
+		c.DecodePlaceholder,
+		c.FlatPathDelimiter,
+	)
 }

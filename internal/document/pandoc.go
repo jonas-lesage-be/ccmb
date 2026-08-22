@@ -74,10 +74,6 @@ func (c *Converter) runPandocConversion(
 		}
 	}
 
-	if err := c.prependHeader(outputPath, outputName); err != nil {
-		return fmt.Errorf("failed to prepend context header to markdown: %w", err)
-	}
-
 	if err := os.Remove(srcPath); err != nil {
 		return fmt.Errorf("failed to remove temporary document after conversion: %w", err)
 	}
