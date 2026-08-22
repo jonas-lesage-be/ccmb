@@ -18,12 +18,12 @@ import (
 func description() string {
 	return strings.TrimSpace(`
 Context Combiner (ccmb) is a command-line tool that flattens, filters, converts,
- and merges files from a source directory into a target directory.
+and merges files from a source directory into a target directory.
 It supports various file types, including image, video, and text files,
- and allows for size-constrained merging of visual and text data.
+and allows for size-constrained merging of visual and text data.
 
 The tool can be configured via command-line flags, environment variables,
- or a configuration file in JSON, TOML, or YAML format.
+or a configuration file in JSON, TOML, or YAML format.
 Flags and environment variables take precedence over configuration file values.
 `)
 }
