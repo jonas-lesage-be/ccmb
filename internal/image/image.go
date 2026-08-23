@@ -117,7 +117,7 @@ func (c *Converter) processJob(ctx context.Context, j job) error {
 	mimeType := mtype.String()
 
 	if mimeType == "image/gif" {
-		if err := c.processGif(j.path, j.name); err != nil {
+		if err := c.processGIF(j.path, j.name); err != nil {
 			return fmt.Errorf("error processing GIF %s: %w", j.name, err)
 		}
 		return nil

@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 )
 
-func (c *Converter) processGif(srcPath, name string) error {
+func (c *Converter) processGIF(srcPath, name string) error {
 	in, err := os.Open(filepath.Clean(srcPath))
 	if err != nil {
 		return fmt.Errorf("failed to open source GIF: %w", err)
