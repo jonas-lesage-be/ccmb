@@ -3,6 +3,6 @@
 package config
 
 const (
-	isWindows               = false
+	IsWindows               = false
 	defaultFilterExtensions = ".ttf,.woff,.woff2"
 )
