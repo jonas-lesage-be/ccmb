@@ -50,7 +50,6 @@ type Config struct {
 	SkipFlattener            bool `mapstructure:"skip_flattener"`
 	SkipTARFlattener         bool `mapstructure:"skip_tar_flattener"`
 	SkipTARFlattenerExplicit bool `mapstructure:"-"`
-	SkipFilter               bool `mapstructure:"skip_filter"`
 	SkipDocumentConverter    bool `mapstructure:"skip_document_converter"`
 	SkipImageConverter       bool `mapstructure:"skip_image_converter"`
 	SkipVideoExtractor       bool `mapstructure:"skip_video_extractor"`
@@ -96,7 +95,6 @@ const (
 	defaultVerbose               = false
 	defaultSkipFlattener         = false
 	defaultSkipTARFlattener      = IsWindows
-	defaultSkipFilter            = true
 	defaultSkipDocumentConverter = false
 	defaultSkipImageConverter    = false
 	defaultSkipVideoExtractor    = false

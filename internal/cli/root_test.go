@@ -114,7 +114,6 @@ func TestNewRootCommand_UsesDefaultsWithoutFlags(t *testing.T) {
 
 	assert.False(t, cfg.Verbose)
 	assert.False(t, cfg.SkipFlattener)
-	assert.True(t, cfg.SkipFilter)
 	assert.False(t, cfg.SkipImageConverter)
 	assert.False(t, cfg.SkipVideoExtractor)
 	assert.False(t, cfg.SkipVisualMerger)
@@ -169,7 +168,6 @@ func TestNewRootCommand_FlagsOverrideDefaults(t *testing.T) {
 		"--verbose=true",
 		"--skip-flattener=true",
 		"--skip-tar-flattener=false",
-		"--skip-filter=false",
 		"--skip-document-converter=true",
 		"--skip-image-converter=true",
 		"--skip-video-extractor=true",
@@ -227,7 +225,6 @@ func TestNewRootCommand_FlagsOverrideDefaults(t *testing.T) {
 	assert.True(t, cfg.Verbose)
 	assert.True(t, cfg.SkipFlattener)
 	assert.False(t, cfg.SkipTARFlattener)
-	assert.False(t, cfg.SkipFilter)
 	assert.True(t, cfg.SkipImageConverter)
 	assert.True(t, cfg.SkipVideoExtractor)
 	assert.True(t, cfg.SkipVisualMerger)

@@ -59,7 +59,6 @@ func NewViper() *viper.Viper {
 
 	v.SetDefault("verbose", defaultVerbose)
 	v.SetDefault("skip_flattener", defaultSkipFlattener)
-	v.SetDefault("skip_filter", defaultSkipFilter)
 	v.SetDefault("skip_document_converter", defaultSkipDocumentConverter)
 	v.SetDefault("skip_image_converter", defaultSkipImageConverter)
 	v.SetDefault("skip_video_extractor", defaultSkipVideoExtractor)
