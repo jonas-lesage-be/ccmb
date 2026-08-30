@@ -43,8 +43,8 @@ func TestNewRootCommand_UsesDefaultsWithoutFlags(t *testing.T) {
 	assert.Equal(t, 8, cfg.MaxFlattenerWorkers)
 	assert.Equal(t, 8, cfg.MaxDocumentWorkers)
 	assert.Equal(t, 8, cfg.MaxImageWorkers)
-	assert.Equal(t, 4, cfg.MaxVideoWorkers)
-	assert.Equal(t, 8, cfg.MaxVisualMergeWorkers)
+	assert.Equal(t, 8, cfg.MaxVideoWorkers)
+	assert.Equal(t, 16, cfg.MaxVisualMergeWorkers)
 	assert.Equal(t, 15*time.Second, cfg.ImageConversionTimeout)
 	assert.Equal(t, 1*time.Minute, cfg.VideoExtractTimeout)
 
@@ -61,6 +61,8 @@ func TestNewRootCommand_UsesDefaultsWithoutFlags(t *testing.T) {
 	assert.Equal(t, int64(4*conv.GiB), cfg.MaxArchiveFileBytes)
 	assert.Equal(t, int64(48*conv.MiB), cfg.MaxPDFFileBytes)
 	assert.Equal(t, int64(2*conv.MiB), cfg.MaxTextFileBytes)
+
+	assert.False(t, cfg.DisableInMemoryPDF)
 
 	assert.Nil(t, cfg.ImageExtensions)
 	assert.Nil(t, cfg.VideoExtensions)
@@ -158,6 +160,8 @@ func TestNewRootCommand_FlagsOverrideDefaults(t *testing.T) {
 		"--max-pdf-file-bytes", "33554432", // 32 * conv.MiB
 		"--max-text-file-bytes", "1048576", // 1 * conv.MiB
 
+		"--disable-in-memory-pdf=true",
+
 		"--filter-extensions", "val1,val2",
 		"--document-extensions", "doc1,doc2",
 		"--image-extensions", "img1,img2",
@@ -212,6 +216,8 @@ func TestNewRootCommand_FlagsOverrideDefaults(t *testing.T) {
 	assert.Equal(t, int64(2*conv.GiB), cfg.MaxArchiveFileBytes)
 	assert.Equal(t, int64(32*conv.MiB), cfg.MaxPDFFileBytes)
 	assert.Equal(t, int64(1*conv.MiB), cfg.MaxTextFileBytes)
+
+	assert.True(t, cfg.DisableInMemoryPDF)
 
 	assert.True(t, cfg.FilterExtensions[".val1"])
 	assert.True(t, cfg.FilterExtensions[".val2"])

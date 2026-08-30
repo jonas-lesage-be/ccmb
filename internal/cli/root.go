@@ -131,6 +131,8 @@ func bindFlags(cmd *cobra.Command, v *viper.Viper) error {
 	flags.Int64("max-pdf-file-bytes", 0, "Maximum PDF size in bytes")
 	flags.Int64("max-text-file-bytes", 0, "Maximum text file size in bytes")
 
+	flags.Bool("disable-in-memory-pdf", false, "Disable in-memory PDF processing")
+
 	flags.String("filter-extensions", "", "Comma-separated extensions to filter")
 	flags.String("document-extensions", "", "Comma-separated document extensions to convert")
 	flags.String("image-extensions", "", "Comma-separated image extensions to convert")

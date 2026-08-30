@@ -69,6 +69,8 @@ func TestLoad_WithConfigFiles(t *testing.T) {
 			assert.Equal(t, int64(50331648), cfg.MaxPDFFileBytes)
 			assert.Equal(t, int64(2097152), cfg.MaxTextFileBytes)
 
+			assert.True(t, cfg.DisableInMemoryPDF)
+
 			assert.Nil(t, cfg.ImageExtensions)
 			assert.Nil(t, cfg.VideoExtensions)
 
@@ -115,13 +117,13 @@ func TestLoad_WithConfigFiles(t *testing.T) {
 			}
 			assert.True(t, cfg.VisualExtensions[".pdf"])
 
-			assert.False(t, cfg.Verbose)
-			assert.False(t, cfg.SkipFlattener)
+			assert.True(t, cfg.Verbose)
+			assert.True(t, cfg.SkipFlattener)
 			assert.True(t, cfg.SkipTARFlattener)
-			assert.False(t, cfg.SkipImageConverter)
-			assert.False(t, cfg.SkipVideoExtractor)
-			assert.False(t, cfg.SkipVisualMerger)
-			assert.False(t, cfg.SkipTextMerger)
+			assert.True(t, cfg.SkipImageConverter)
+			assert.True(t, cfg.SkipVideoExtractor)
+			assert.True(t, cfg.SkipVisualMerger)
+			assert.True(t, cfg.SkipTextMerger)
 		})
 	}
 }
@@ -154,6 +156,8 @@ func TestLoad_UsesOverrides(t *testing.T) {
 	v.Set("max_archive_file_bytes", 2*conv.GiB)
 	v.Set("max_pdf_file_bytes", 32*conv.MiB)
 	v.Set("max_text_file_bytes", 1*conv.MiB)
+
+	v.Set("disable_in_memory_pdf", true)
 
 	v.Set("filter_extensions", "val1,val2")
 	v.Set("image_extensions", "img1,img2")
@@ -201,6 +205,8 @@ func TestLoad_UsesOverrides(t *testing.T) {
 	assert.Equal(t, int64(2*conv.GiB), cfg.MaxArchiveFileBytes)
 	assert.Equal(t, int64(32*conv.MiB), cfg.MaxPDFFileBytes)
 	assert.Equal(t, int64(1*conv.MiB), cfg.MaxTextFileBytes)
+
+	assert.True(t, cfg.DisableInMemoryPDF)
 
 	assert.Contains(t, cfg.FilterExtensions, ".val1")
 	assert.True(t, cfg.FilterExtensions[".val2"])

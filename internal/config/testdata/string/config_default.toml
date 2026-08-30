@@ -26,15 +26,17 @@ max_archive_file_bytes = 4294967296
 max_pdf_file_bytes = 50331648
 max_text_file_bytes = 2097152
 
+disable_in_memory_pdf = true
+
 document_extensions = ".csv,.odt,.ods,.odp,.epub,.rtf,.doc,.docx,.docm,.xls,.xlsx,.xlsm,.ppt,.pptx,.pptm"
 supported_image_extensions = ".jpg, .jpeg, .png, .webp, .tif, .tiff"
 visual_extensions = ".pdf, .jpg, .jpeg, .png, .webp, .tif, .tiff"
 
-verbose = false
-skip_flattener = false
+verbose = true
+skip_flattener = true
 skip_tar_flattener = true
 skip_filter = true
-skip_image_converter = false
-skip_video_extractor = false
-skip_visual_merger = false
-skip_text_merger = false
+skip_image_converter = true
+skip_video_extractor = true
+skip_visual_merger = true
+skip_text_merger = true

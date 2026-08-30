@@ -1,9 +1,11 @@
 package visualmerge
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -18,39 +20,115 @@ import (
 	"ccmb/internal/config"
 )
 
-func (m *Merger) preparePDFComponent(ctx context.Context, j job) (string, int64, error) {
-	convertedPDF, err := m.convertToHeaderedPDF(ctx, j)
+func (m *Merger) preparePDFComponent(ctx context.Context, j job) (jobResult, error) {
+	path, data, err := m.convertToHeaderedPDF(ctx, j)
 	if err != nil {
-		return "", 0, err
+		return jobResult{}, err
 	}
 
-	fi, err := os.Stat(convertedPDF)
+	if m.InMemory {
+		return jobResult{path: "", data: data, size: int64(len(data))}, nil
+	}
+
+	fi, err := os.Stat(path)
 	if err != nil {
 		if !errors.Is(err, os.ErrNotExist) {
-			if err := os.Remove(convertedPDF); err != nil {
-				slog.Error("Failed to delete file", "path", convertedPDF, "err", err)
+			if err := os.Remove(path); err != nil {
+				slog.Error("Failed to delete file", "path", path, "err", err)
 			}
 		}
-		return "", 0, fmt.Errorf("failed to check PDF status: %w", err)
+		return jobResult{}, fmt.Errorf("failed to check PDF status: %w", err)
 	}
 
-	return convertedPDF, fi.Size(), nil
+	return jobResult{path: path, data: nil, size: fi.Size()}, nil
 }
 
-func (m *Merger) convertToHeaderedPDF(ctx context.Context, j job) (string, error) {
+func (m *Merger) convertToHeaderedPDF(ctx context.Context, j job) (string, []byte, error) {
 	if err := ctx.Err(); err != nil {
-		return "", fmt.Errorf("context error before converting file %s: %w", j.path, err)
+		return "", nil, fmt.Errorf("context error before converting file %s: %w", j.path, err)
 	}
 
-	ext := strings.ToLower(filepath.Ext(j.name))
+	wm, err := m.createWatermark(j)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to create watermark for %s: %w", j.name, err)
+	}
+
+	if m.InMemory {
+		data, err := convertToHeaderedPDFInMemory(j, wm)
+		if err != nil {
+			return "", nil, err
+		}
+		return "", data, nil
+	}
+
+	path, err := convertToHeaderedPDFOnDisk(j, wm)
+	if err != nil {
+		return "", nil, err
+	}
+	return path, nil, nil
+}
+
+func convertToHeaderedPDFInMemory(
+	j job,
+	wm *pdfcpu_model.Watermark,
+) ([]byte, error) {
+	data, err := convertToPDFInMemory(j)
+	if err != nil {
+		return nil, err
+	}
+
+	var watermarkedPDF bytes.Buffer
+	if err := pdfcpu_api.AddWatermarks(data, &watermarkedPDF, nil, wm, nil); err != nil {
+		return nil, fmt.Errorf("failed to add watermark to %s: %w", j.name, err)
+	}
+
+	return watermarkedPDF.Bytes(), nil
+}
+
+func convertToPDFInMemory(j job) (*bytes.Reader, error) {
+	cleanSrcPath := filepath.Clean(j.path)
+
+	if j.ext == ".pdf" {
+		pdf, err := os.ReadFile(cleanSrcPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read PDF %s: %w", j.name, err)
+		}
+		return bytes.NewReader(pdf), nil
+	}
+
+	imageFile, err := os.Open(cleanSrcPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open image %s: %w", j.name, err)
+	}
+	defer func() {
+		if err := imageFile.Close(); err != nil {
+			slog.Error("Failed to close file", "path", cleanSrcPath, "err", err)
+		}
+	}()
+
+	var importedPDF bytes.Buffer
+	imp := pdfcpu.DefaultImportConfig()
+	imp.PageSize = "Letter"
+	if err := pdfcpu_api.ImportImages(
+		nil,
+		&importedPDF,
+		[]io.Reader{imageFile},
+		imp,
+		nil,
+	); err != nil {
+		return nil, fmt.Errorf("failed to import image %s to PDF: %w", j.name, err)
+	}
+
+	return bytes.NewReader(importedPDF.Bytes()), nil
+}
+
+func convertToHeaderedPDFOnDisk(
+	j job,
+	wm *pdfcpu_model.Watermark,
+) (string, error) {
 	outPDF := filepath.Join(os.TempDir(), fmt.Sprintf("ccmb_tmp_%d.pdf", j.index))
 
-	wm, err := m.createWatermark(j.name, ext)
-	if err != nil {
-		return "", fmt.Errorf("failed to create watermark for %s: %w", j.name, err)
-	}
-
-	if ext == ".pdf" {
+	if j.ext == ".pdf" {
 		if err := pdfcpu_api.AddWatermarksFile(j.path, outPDF, nil, wm, nil); err != nil {
 			return "", fmt.Errorf("failed to add watermark to PDF %s: %w", j.name, err)
 		}
@@ -63,11 +141,11 @@ func (m *Merger) convertToHeaderedPDF(ctx context.Context, j job) (string, error
 	return outPDF, nil
 }
 
-func (m *Merger) createWatermark(flatName, ext string) (*pdfcpu_model.Watermark, error) {
+func (m *Merger) createWatermark(j job) (*pdfcpu_model.Watermark, error) {
 	desc := "pos: tr, off: -6 -6, points: 10, scale: 1.0 abs, rot: 0, mode: 0," +
 		" color: #000000, bgcol: #ffffff, border: 1 #000000, margins: 4"
 	wm, err := pdfcpu.ParseTextWatermarkDetails(
-		m.headerText(flatName, ext),
+		m.headerText(j),
 		desc,
 		true,
 		pdfcpu_types.POINTS,
@@ -79,13 +157,55 @@ func (m *Merger) createWatermark(flatName, ext string) (*pdfcpu_model.Watermark,
 	return wm, nil
 }
 
-func (m *Merger) mergeBatch(files []string, counter int) error {
+func (m *Merger) mergeBatch(batch []jobResult, counter int) error {
 	fname := fmt.Sprintf("%s%d.pdf", m.VisualPartPrefix, counter)
-	fpath := filepath.Join(m.TargetDir, fname)
+	fpath := filepath.Clean(filepath.Join(m.TargetDir, fname))
 	slog.Info("Flushing and writing structured batch out to file payload", "file", fname)
 
-	err := pdfcpu_api.MergeCreateFile(files, fpath, false, nil)
+	var err error
+	if m.InMemory {
+		err = mergeBatchInMemory(fname, fpath, batch)
+	} else {
+		err = mergeBatchOnDisk(fname, fpath, batch)
+	}
+
 	if err != nil {
+		return fmt.Errorf("failed to merge batch: %w", err)
+	}
+
+	return nil
+}
+
+func mergeBatchInMemory(fname, fpath string, batch []jobResult) error {
+	readers := make([]io.ReadSeeker, len(batch))
+	for i, component := range batch {
+		readers[i] = bytes.NewReader(component.data)
+	}
+
+	out, err := os.Create(filepath.Clean(fpath))
+	if err != nil {
+		return fmt.Errorf("failed to create merged batch %s: %w", fname, err)
+	}
+	defer func() {
+		if err := out.Close(); err != nil {
+			slog.Error("Failed to close file", "path", fpath, "err", err)
+		}
+	}()
+
+	if err := pdfcpu_api.MergeRaw(readers, out, false, nil); err != nil {
+		return fmt.Errorf("failed to merge batch into %s: %w", fname, err)
+	}
+
+	return nil
+}
+
+func mergeBatchOnDisk(fname, fpath string, batch []jobResult) error {
+	files := make([]string, len(batch))
+	for i, component := range batch {
+		files[i] = component.path
+	}
+
+	if err := pdfcpu_api.MergeCreateFile(files, fpath, false, nil); err != nil {
 		return fmt.Errorf("failed to merge batch into %s: %w", fname, err)
 	}
 
@@ -96,21 +216,21 @@ func (m *Merger) mergeBatch(files []string, counter int) error {
 	return nil
 }
 
-func (m *Merger) headerText(flatName, ext string) string {
+func (m *Merger) headerText(j job) string {
 	frameMarker := m.FlatPathDelimiter + "frame_"
-	if before, after, found := strings.Cut(flatName, frameMarker); found {
-		frameNum := strings.TrimSuffix(after, ext)
+	if before, after, found := strings.Cut(j.name, frameMarker); found {
+		frameNum := strings.TrimSuffix(after, j.ext)
 		if _, err := strconv.Atoi(frameNum); err == nil {
 			cleanPath := m.originalPathFromFlatName(before)
 			return fmt.Sprintf("File path: %s frame number %s", cleanPath, frameNum)
 		}
 	}
 
-	cleanFlatName := flatName
-	if lastIdx := strings.LastIndex(flatName, m.FlatPathDelimiter); lastIdx != -1 {
-		lastSegment := flatName[lastIdx+len(m.FlatPathDelimiter):]
+	cleanFlatName := j.name
+	if lastIdx := strings.LastIndex(j.name, m.FlatPathDelimiter); lastIdx != -1 {
+		lastSegment := j.name[lastIdx+len(m.FlatPathDelimiter):]
 		if strings.HasPrefix(lastSegment, ".") {
-			cleanFlatName = flatName[:lastIdx]
+			cleanFlatName = j.name[:lastIdx]
 		}
 	}
 

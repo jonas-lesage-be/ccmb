@@ -25,6 +25,7 @@ type Merger struct {
 	DecodePlaceholder string
 	VisualPartPrefix  string
 
+	InMemory         bool
 	VisualExtensions map[string]bool
 }
 
@@ -32,10 +33,12 @@ type job struct {
 	index int
 	name  string
 	path  string
+	ext   string
 }
 
 type jobResult struct {
 	path string
+	data []byte
 	size int64
 }
 
@@ -51,6 +54,7 @@ func NewMerger(cfg *config.Config) *Merger {
 		DecodePlaceholder: cfg.DecodePlaceholder,
 		VisualPartPrefix:  cfg.VisualPartPrefix,
 
+		InMemory:         !cfg.DisableInMemoryPDF,
 		VisualExtensions: cfg.VisualExtensions,
 	}
 }
@@ -103,6 +107,7 @@ func (m *Merger) filterFiles(files []os.DirEntry, baseDir string) []job {
 			index: indexCounter,
 			name:  name,
 			path:  filepath.Join(baseDir, name),
+			ext:   ext,
 		})
 		indexCounter++
 	}
@@ -133,22 +138,23 @@ func (m *Merger) processFiles(ctx context.Context, jobs []job) error {
 }
 
 func (m *Merger) processJob(ctx context.Context, results []jobResult, j job) error {
-	convertedPDF, size, err := m.preparePDFComponent(ctx, j)
+	jobResult, err := m.preparePDFComponent(ctx, j)
 	if err != nil {
 		slog.Warn("Skipping asset due to generation error", "file", j.name, "err", err)
 		return nil
 	}
-	results[j.index] = jobResult{path: convertedPDF, size: size}
+	results[j.index] = jobResult
+
 	return nil
 }
 
 func (m *Merger) mergeBatches(results []jobResult) error {
-	var batch []string
+	var batch []jobResult
 	var currentSizeBytes int64
 	partCounter := 1
 
 	for _, res := range results {
-		if res.path == "" {
+		if res.path == "" && len(res.data) == 0 {
 			continue
 		}
 
@@ -161,7 +167,7 @@ func (m *Merger) mergeBatches(results []jobResult) error {
 			currentSizeBytes = 0
 		}
 
-		batch = append(batch, res.path)
+		batch = append(batch, res)
 		currentSizeBytes += res.size
 	}
 

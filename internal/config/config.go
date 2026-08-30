@@ -39,6 +39,8 @@ type Config struct {
 	MaxPDFFileBytes     int64 `mapstructure:"max_pdf_file_bytes"`
 	MaxTextFileBytes    int64 `mapstructure:"max_text_file_bytes"`
 
+	DisableInMemoryPDF bool `mapstructure:"disable_in_memory_pdf"`
+
 	FilterExtensions         map[string]bool `mapstructure:"filter_extensions"`
 	DocumentExtensions       map[string]bool `mapstructure:"document_extensions"`
 	ImageExtensions          map[string]bool `mapstructure:"image_extensions"`
@@ -67,8 +69,8 @@ const (
 	defaultMaxFlattenerWorkers    = 8
 	defaultMaxDocumentWorkers     = 8
 	defaultMaxImageWorkers        = 8
-	defaultMaxVideoWorkers        = 4
-	defaultMaxVisualMergeWorkers  = 8
+	defaultMaxVideoWorkers        = 8
+	defaultMaxVisualMergeWorkers  = 16
 	defaultImageConversionTimeout = 15 * time.Second
 	defaultVideoExtractTimeout    = 1 * time.Minute
 
@@ -84,6 +86,8 @@ const (
 	defaultMaxArchiveFileBytes int64 = 4 * conv.GiB
 	defaultMaxPDFFileBytes     int64 = 48 * conv.MiB
 	defaultMaxTextFileBytes    int64 = 2 * conv.MiB
+
+	defaultDisableInMemoryPDF = false
 
 	microsoftOfficeExtensions       = ".doc,.docx,.docm,.xls,.xlsx,.xlsm,.ppt,.pptx,.pptm"
 	defaultDocumentExtensions       = ".csv,.odt,.ods,.odp,.epub,.rtf," + microsoftOfficeExtensions
