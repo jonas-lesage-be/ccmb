@@ -5,6 +5,7 @@ linters:
 
   disable: # Rules that are often too strict or not applicable to this project.
     - exhaustruct # Requires struct fields to be explicitly initialized.
+    - exhaustruct_v5 # Requires struct fields to be explicitly initialized.
     - gomodguard # [Old version] Requires that all dependencies are explicitly listed in go.mod.
     - nlreturn # Requires explicit return statements at the end of functions.
     - noinlineerr # Requires that errors are not inlined in return statements.
