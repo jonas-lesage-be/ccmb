@@ -204,12 +204,12 @@ func TestLoad_UsesOverrides(t *testing.T) {
 	assert.Equal(t, int64(32*conv.MiB), cfg.MaxPDFFileBytes)
 	assert.Equal(t, int64(1*conv.MiB), cfg.MaxTextFileBytes)
 
-	assert.Contains(t, cfg.FilterExtensions, "val1")
-	assert.True(t, cfg.FilterExtensions["val2"])
-	assert.True(t, cfg.ImageExtensions["img1"])
-	assert.True(t, cfg.SupportedImageExtensions["s1"])
-	assert.True(t, cfg.VideoExtensions["v1"])
-	assert.True(t, cfg.VisualExtensions["v3"])
+	assert.Contains(t, cfg.FilterExtensions, ".val1")
+	assert.True(t, cfg.FilterExtensions[".val2"])
+	assert.True(t, cfg.ImageExtensions[".img1"])
+	assert.True(t, cfg.SupportedImageExtensions[".s1"])
+	assert.True(t, cfg.VideoExtensions[".v1"])
+	assert.True(t, cfg.VisualExtensions[".v3"])
 
 	assert.Equal(t, !defaultVerbose, cfg.Verbose)
 	assert.Equal(t, !defaultSkipFlattener, cfg.SkipFlattener)

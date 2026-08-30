@@ -109,6 +109,13 @@ func Load(v *viper.Viper, configFile string) (*Config, error) {
 		)
 	}
 
+	cfg.FilterExtensions = addDotPrefix(cfg.FilterExtensions)
+	cfg.DocumentExtensions = addDotPrefix(cfg.DocumentExtensions)
+	cfg.ImageExtensions = addDotPrefix(cfg.ImageExtensions)
+	cfg.SupportedImageExtensions = addDotPrefix(cfg.SupportedImageExtensions)
+	cfg.VideoExtensions = addDotPrefix(cfg.VideoExtensions)
+	cfg.VisualExtensions = addDotPrefix(cfg.VisualExtensions)
+
 	return &cfg, nil
 }
 
@@ -226,4 +233,20 @@ func parseBoolMap(value string) map[string]bool {
 	}
 
 	return set
+}
+
+func addDotPrefix(m map[string]bool) map[string]bool {
+	if m == nil {
+		return nil
+	}
+
+	res := make(map[string]bool, len(m))
+	for key, val := range m {
+		if !strings.HasPrefix(key, ".") {
+			key = "." + key
+		}
+		res[key] = val
+	}
+
+	return res
 }
