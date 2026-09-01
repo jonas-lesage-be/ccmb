@@ -52,6 +52,8 @@ func NewViper() *viper.Viper {
 
 	v.SetDefault("disable_in_memory_pdf", defaultDisableInMemoryPDF)
 
+	v.SetDefault("filter_directories", parseBoolMap(defaultFilterDirectories))
+
 	v.SetDefault("filter_extensions", parseBoolMap(defaultFilterExtensions))
 	v.SetDefault("document_extensions", parseBoolMap(defaultDocumentExtensions))
 	v.SetDefault("image_extensions", parseBoolMap(defaultImageExtensions))

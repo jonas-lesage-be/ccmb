@@ -41,6 +41,8 @@ type Config struct {
 
 	DisableInMemoryPDF bool `mapstructure:"disable_in_memory_pdf"`
 
+	FilterDirectories map[string]bool `mapstructure:"filter_directories"`
+
 	FilterExtensions         map[string]bool `mapstructure:"filter_extensions"`
 	DocumentExtensions       map[string]bool `mapstructure:"document_extensions"`
 	ImageExtensions          map[string]bool `mapstructure:"image_extensions"`
@@ -89,6 +91,12 @@ const (
 
 	defaultDisableInMemoryPDF = false
 
+	buildDirs                = "dist,build,bin,obj,target"
+	packageDirs              = "node_modules,vendor,.yarn"
+	toolDirs                 = "__pycache__,.terraform,.gradle,.next"
+	systemDirs               = ".git,__MACOSX"
+	defaultFilterDirectories = buildDirs + "," + packageDirs + "," + toolDirs + "," + systemDirs
+
 	microsoftOfficeExtensions       = ".doc,.docx,.docm,.xls,.xlsx,.xlsm,.ppt,.pptx,.pptm"
 	defaultDocumentExtensions       = ".csv,.odt,.ods,.odp,.epub,.rtf," + microsoftOfficeExtensions
 	defaultImageExtensions          = "nil"
@@ -106,12 +114,15 @@ const (
 	defaultSkipTextMerger        = false
 )
 
-// ShouldIgnore determines if a directory component contains macOS junk files.
-func ShouldIgnore(pathStr string) bool {
+// ShouldFilter determines if a directory entry should be ignored based on the provided filters.
+func ShouldFilter(pathStr, ext string, filterDirs, filterExts map[string]bool) bool {
 	parts := strings.SplitSeq(filepath.ToSlash(pathStr), "/")
-
 	for part := range parts {
-		if part == "__MACOSX" || strings.HasPrefix(part, ".DS_") {
+		if filterDirs[part] || filterExts[ext] {
+			return true
+		}
+
+		if strings.HasPrefix(part, ".DS_") {
 			return true
 		}
 	}

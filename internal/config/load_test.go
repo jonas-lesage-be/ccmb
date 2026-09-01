@@ -71,10 +71,30 @@ func TestLoad_WithConfigFiles(t *testing.T) {
 
 			assert.True(t, cfg.DisableInMemoryPDF)
 
+			expectedFilterDirs := []string{
+				"dist",
+				"build",
+				"bin",
+				"obj",
+				"target",
+				"node_modules",
+				"vendor",
+				".yarn",
+				"__pycache__",
+				".terraform",
+				".gradle",
+				".next",
+				".git",
+				"__MACOSX",
+			}
+			for _, dir := range expectedFilterDirs {
+				assert.True(t, cfg.FilterDirectories[dir], "expected filter directory: %s", dir)
+			}
+
 			assert.Nil(t, cfg.ImageExtensions)
 			assert.Nil(t, cfg.VideoExtensions)
 
-			expectedFilterExtensions := []string{
+			expectedFilterExts := []string{
 				".tar",
 				".tar.gz",
 				".tgz",
@@ -85,11 +105,11 @@ func TestLoad_WithConfigFiles(t *testing.T) {
 				".tar.bz2",
 				".tbz2",
 			}
-			for _, ext := range expectedFilterExtensions {
-				assert.True(t, cfg.FilterExtensions[ext])
+			for _, ext := range expectedFilterExts {
+				assert.True(t, cfg.FilterExtensions[ext], "expected filter extension: %s", ext)
 			}
 
-			expectedDocumentExtensions := []string{
+			expectedDocumentExts := []string{
 				".csv",
 				".odt",
 				".ods",
@@ -106,14 +126,19 @@ func TestLoad_WithConfigFiles(t *testing.T) {
 				".pptx",
 				".pptm",
 			}
-			for _, ext := range expectedDocumentExtensions {
+			for _, ext := range expectedDocumentExts {
 				assert.True(t, cfg.DocumentExtensions[ext])
 			}
 
-			expectedExtensions := []string{".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff"}
-			for _, ext := range expectedExtensions {
-				assert.True(t, cfg.SupportedImageExtensions[ext])
-				assert.True(t, cfg.VisualExtensions[ext])
+			expectedExts := []string{".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff"}
+			for _, ext := range expectedExts {
+				assert.True(
+					t,
+					cfg.SupportedImageExtensions[ext],
+					"expected supported image extension: %s",
+					ext,
+				)
+				assert.True(t, cfg.VisualExtensions[ext], "expected visual extension: %s", ext)
 			}
 			assert.True(t, cfg.VisualExtensions[".pdf"])
 
@@ -158,6 +183,8 @@ func TestLoad_UsesOverrides(t *testing.T) {
 	v.Set("max_text_file_bytes", 1*conv.MiB)
 
 	v.Set("disable_in_memory_pdf", true)
+
+	v.Set("filter_directories", "dir1,dir2,dir3")
 
 	v.Set("filter_extensions", "val1,val2")
 	v.Set("image_extensions", "img1,img2")
@@ -208,7 +235,11 @@ func TestLoad_UsesOverrides(t *testing.T) {
 
 	assert.True(t, cfg.DisableInMemoryPDF)
 
-	assert.Contains(t, cfg.FilterExtensions, ".val1")
+	assert.True(t, cfg.FilterDirectories["dir1"])
+	assert.True(t, cfg.FilterDirectories["dir2"])
+	assert.True(t, cfg.FilterDirectories["dir3"])
+
+	assert.True(t, cfg.FilterExtensions[".val1"])
 	assert.True(t, cfg.FilterExtensions[".val2"])
 	assert.True(t, cfg.ImageExtensions[".img1"])
 	assert.True(t, cfg.SupportedImageExtensions[".s1"])

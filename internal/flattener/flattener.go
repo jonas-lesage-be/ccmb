@@ -31,6 +31,7 @@ type Flattener struct {
 	EscapedDelimiter  string
 
 	MaxArchiveFileBytes      int64
+	FilterDirectories        map[string]bool
 	FilterExtensions         map[string]bool
 	SkipTARFlattener         bool
 	SkipTARFlattenerExplicit bool
@@ -50,6 +51,7 @@ func NewFlattener(cfg *config.Config) *Flattener {
 		EscapedDelimiter:  cfg.EscapedDelimiter,
 
 		MaxArchiveFileBytes:      cfg.MaxArchiveFileBytes,
+		FilterDirectories:        cfg.FilterDirectories,
 		FilterExtensions:         cfg.FilterExtensions,
 		SkipTARFlattener:         cfg.SkipTARFlattener,
 		SkipTARFlattenerExplicit: cfg.SkipTARFlattenerExplicit,
@@ -115,7 +117,12 @@ func (f *Flattener) walkFiles(ctx context.Context, absTarget string, paths chan<
 			return fmt.Errorf("context error while walking source directory: %w", err)
 		}
 
-		if d.IsDir() || config.ShouldIgnore(srcPath) {
+		if d.IsDir() {
+			return nil
+		}
+
+		ext := Extension(srcPath)
+		if config.ShouldFilter(srcPath, ext, f.FilterDirectories, f.FilterExtensions) {
 			return nil
 		}
 
@@ -148,11 +155,6 @@ func (f *Flattener) processFile(ctx context.Context, path string) error {
 
 	filename := filepath.Base(path)
 	ext := Extension(path)
-	if f.FilterExtensions[ext] {
-		slog.Debug("Skipping filtered file", "file", filename, "extension", ext)
-		return nil
-	}
-
 	displayExt := strings.TrimPrefix(strings.ToUpper(ext), ".")
 	handler := f.handlerForExtension(ext)
 
@@ -228,20 +230,9 @@ func (f *Flattener) copyFileSecure(ctx context.Context, src, dst string) error {
 
 func (f *Flattener) createUnique(path string, mode os.FileMode) (*os.File, string, error) {
 	ext := Extension(path)
-
-	if f.FilterExtensions[ext] {
-		slog.Debug(
-			"Intercepting and dropping blocked extension entry at creation point",
-			"extension",
-			ext,
-			"file",
-			filepath.Base(path),
-		)
-		return nil, "", errFilteredExtension
-	}
-
 	base := strings.TrimSuffix(path, ext)
 	candidate := path
+
 	for counter := 1; ; counter++ {
 		cleanCandidate := filepath.Clean(candidate)
 		out, err := os.OpenFile(cleanCandidate, os.O_CREATE|os.O_EXCL|os.O_WRONLY, mode)

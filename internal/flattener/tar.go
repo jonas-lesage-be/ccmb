@@ -111,7 +111,11 @@ func (f *Flattener) processTAREntry(
 		return fmt.Errorf("context error while processing %s %s: %w", ext, header.Name, err)
 	}
 
-	if header.Typeflag != tar.TypeReg || config.ShouldIgnore(header.Name) {
+	if header.Typeflag != tar.TypeReg {
+		return nil
+	}
+
+	if config.ShouldFilter(header.Name, ext, f.FilterDirectories, f.FilterExtensions) {
 		return nil
 	}
 

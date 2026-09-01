@@ -67,7 +67,7 @@ func TestNewRootCommand_UsesDefaultsWithoutFlags(t *testing.T) {
 	assert.Nil(t, cfg.ImageExtensions)
 	assert.Nil(t, cfg.VideoExtensions)
 
-	expectedDocumentExtensions := []string{
+	expectedDocumentExts := []string{
 		".csv",
 		".odt",
 		".ods",
@@ -84,14 +84,14 @@ func TestNewRootCommand_UsesDefaultsWithoutFlags(t *testing.T) {
 		".pptx",
 		".pptm",
 	}
-	for _, ext := range expectedDocumentExtensions {
-		assert.True(t, cfg.DocumentExtensions[ext])
+	for _, ext := range expectedDocumentExts {
+		assert.True(t, cfg.DocumentExtensions[ext], "expected document extension: %s", ext)
 	}
 
-	expectedFilterExtensions := []string{".ttf", ".woff", ".woff2"}
+	expectedFilterExts := []string{".ttf", ".woff", ".woff2"}
 	if config.IsWindows {
-		expectedFilterExtensions = append(
-			expectedFilterExtensions,
+		expectedFilterExts = append(
+			expectedFilterExts,
 			".tar",
 			".tar.gz",
 			".tgz",
@@ -103,14 +103,19 @@ func TestNewRootCommand_UsesDefaultsWithoutFlags(t *testing.T) {
 			".tbz2",
 		)
 	}
-	for _, ext := range expectedFilterExtensions {
-		assert.True(t, cfg.FilterExtensions[ext])
+	for _, ext := range expectedFilterExts {
+		assert.True(t, cfg.FilterExtensions[ext], "expected filter extension: %s", ext)
 	}
 
-	expectedSupportedExtensions := []string{".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff"}
-	for _, ext := range expectedSupportedExtensions {
-		assert.True(t, cfg.SupportedImageExtensions[ext])
-		assert.True(t, cfg.VisualExtensions[ext])
+	expectedSupportedExts := []string{".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff"}
+	for _, ext := range expectedSupportedExts {
+		assert.True(
+			t,
+			cfg.SupportedImageExtensions[ext],
+			"expected supported image extension: %s",
+			ext,
+		)
+		assert.True(t, cfg.VisualExtensions[ext], "expected visual extension: %s", ext)
 	}
 	assert.True(t, cfg.VisualExtensions[".pdf"])
 
@@ -161,6 +166,8 @@ func TestNewRootCommand_FlagsOverrideDefaults(t *testing.T) {
 		"--max-text-file-bytes", "1048576", // 1 * conv.MiB
 
 		"--disable-in-memory-pdf=true",
+
+		"--filter-directories", "dirA,dirB,dirC",
 
 		"--filter-extensions", "val1,val2",
 		"--document-extensions", "doc1,doc2",
@@ -218,6 +225,10 @@ func TestNewRootCommand_FlagsOverrideDefaults(t *testing.T) {
 	assert.Equal(t, int64(1*conv.MiB), cfg.MaxTextFileBytes)
 
 	assert.True(t, cfg.DisableInMemoryPDF)
+
+	assert.True(t, cfg.FilterDirectories["dirA"])
+	assert.True(t, cfg.FilterDirectories["dirB"])
+	assert.True(t, cfg.FilterDirectories["dirC"])
 
 	assert.True(t, cfg.FilterExtensions[".val1"])
 	assert.True(t, cfg.FilterExtensions[".val2"])

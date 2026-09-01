@@ -38,7 +38,12 @@ func (f *Flattener) handleZIP(ctx context.Context, zipPath string) error {
 			return fmt.Errorf("context error while processing ZIP %s: %w", zipPath, err)
 		}
 
-		if file.FileInfo().IsDir() || config.ShouldIgnore(file.Name) {
+		if file.FileInfo().IsDir() {
+			continue
+		}
+
+		ext := Extension(file.Name)
+		if config.ShouldFilter(file.Name, ext, f.FilterDirectories, f.FilterExtensions) {
 			continue
 		}
 

@@ -29,6 +29,23 @@
 
   "disable_in_memory_pdf": true,
 
+  "filter_directories": [
+    "dist",
+    "build",
+    "bin",
+    "obj",
+    "target",
+    "node_modules",
+    "vendor",
+    ".yarn",
+    "__pycache__",
+    ".terraform",
+    ".gradle",
+    ".next",
+    ".git",
+    "__MACOSX"
+  ],
+
   "filter_extensions": null,
   "document_extensions": {
     ".csv": true,

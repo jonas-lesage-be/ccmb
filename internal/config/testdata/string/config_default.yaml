@@ -28,6 +28,8 @@ max_text_file_bytes: 2097152
 
 disable_in_memory_pdf: true
 
+filter_directories: "dist,build,bin,obj,target,node_modules,vendor,.yarn,__pycache__,.terraform,.gradle,.next,.git,__MACOSX"
+
 filter_extensions: ~
 image_extensions: ~
 video_extensions: ~
