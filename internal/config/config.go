@@ -68,11 +68,12 @@ const (
 	defaultTargetFilePermissions os.FileMode = 0o600
 	defaultTextFilePermissions   os.FileMode = 0o600
 
-	defaultMaxFlattenerWorkers    = 8
-	defaultMaxDocumentWorkers     = 8
-	defaultMaxImageWorkers        = 8
-	defaultMaxVideoWorkers        = 8
-	defaultMaxVisualMergeWorkers  = 16
+	halfCPUFraction               = 1.0 / 2
+	defaultMaxFlattenerWorkers    = halfCPUFraction
+	defaultMaxDocumentWorkers     = halfCPUFraction
+	defaultMaxImageWorkers        = halfCPUFraction
+	defaultMaxVideoWorkers        = halfCPUFraction
+	defaultMaxVisualMergeWorkers  = 1.0
 	defaultImageConversionTimeout = 15 * time.Second
 	defaultVideoExtractTimeout    = 1 * time.Minute
 

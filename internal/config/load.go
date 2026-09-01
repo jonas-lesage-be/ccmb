@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"runtime"
 	"strings"
 
 	"github.com/go-viper/mapstructure/v2"
@@ -28,11 +29,11 @@ func NewViper() *viper.Viper {
 	v.SetDefault("target_file_permissions", defaultTargetFilePermissions)
 	v.SetDefault("text_file_permissions", defaultTextFilePermissions)
 
-	v.SetDefault("max_flattener_workers", defaultMaxFlattenerWorkers)
-	v.SetDefault("max_document_workers", defaultMaxDocumentWorkers)
-	v.SetDefault("max_image_workers", defaultMaxImageWorkers)
-	v.SetDefault("max_video_workers", defaultMaxVideoWorkers)
-	v.SetDefault("max_visual_merge_workers", defaultMaxVisualMergeWorkers)
+	v.SetDefault("max_flattener_workers", workerCountFromPct(defaultMaxFlattenerWorkers))
+	v.SetDefault("max_document_workers", workerCountFromPct(defaultMaxDocumentWorkers))
+	v.SetDefault("max_image_workers", workerCountFromPct(defaultMaxImageWorkers))
+	v.SetDefault("max_video_workers", workerCountFromPct(defaultMaxVideoWorkers))
+	v.SetDefault("max_visual_merge_workers", workerCountFromPct(defaultMaxVisualMergeWorkers))
 	v.SetDefault("image_conversion_timeout", defaultImageConversionTimeout)
 	v.SetDefault("video_extract_timeout", defaultVideoExtractTimeout)
 
@@ -111,6 +112,12 @@ func Load(v *viper.Viper, configFile string) (*Config, error) {
 			errTargetDirRequired,
 		)
 	}
+
+	cfg.MaxFlattenerWorkers = adjustWorkerCount(cfg.MaxFlattenerWorkers)
+	cfg.MaxDocumentWorkers = adjustWorkerCount(cfg.MaxDocumentWorkers)
+	cfg.MaxImageWorkers = adjustWorkerCount(cfg.MaxImageWorkers)
+	cfg.MaxVideoWorkers = adjustWorkerCount(cfg.MaxVideoWorkers)
+	cfg.MaxVisualMergeWorkers = adjustWorkerCount(cfg.MaxVisualMergeWorkers)
 
 	cfg.FilterExtensions = addDotPrefix(cfg.FilterExtensions)
 	cfg.DocumentExtensions = addDotPrefix(cfg.DocumentExtensions)
@@ -252,4 +259,26 @@ func addDotPrefix(m map[string]bool) map[string]bool {
 	}
 
 	return res
+}
+
+func adjustWorkerCount(count int) int {
+	if count < 0 {
+		workers := runtime.NumCPU() + count
+		return max(1, workers)
+	}
+
+	if count == 0 {
+		return runtime.NumCPU()
+	}
+
+	return count
+}
+
+func workerCountFromPct(percentage float64) int {
+	if percentage <= 0.0 {
+		return 1
+	}
+
+	workers := int(float64(runtime.NumCPU()) * percentage)
+	return max(1, workers)
 }
