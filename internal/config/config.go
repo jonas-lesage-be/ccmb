@@ -63,7 +63,7 @@ type Config struct {
 
 const (
 	defaultSourceDir                         = "."
-	defaultTargetDir                         = "./_ccmb_output"
+	defaultTargetDir                         = "./_ccmb-output"
 	defaultTargetDirPermissions  os.FileMode = 0o700
 	defaultTargetFilePermissions os.FileMode = 0o600
 	defaultTextFilePermissions   os.FileMode = 0o600

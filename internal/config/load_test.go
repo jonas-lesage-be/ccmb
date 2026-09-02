@@ -44,7 +44,7 @@ func TestLoad_WithConfigFiles(t *testing.T) {
 			require.NotNil(t, cfg)
 
 			assert.Equal(t, ".", cfg.SourceDir)
-			assert.Equal(t, "./_ccmb_output", cfg.TargetDir)
+			assert.Equal(t, "./_ccmb-output", cfg.TargetDir)
 			assert.Equal(t, os.FileMode(0o700), cfg.TargetDirPermissions)
 			assert.Equal(t, os.FileMode(0o600), cfg.TextFilePermissions)
 
