@@ -133,6 +133,8 @@ func bindFlags(cmd *cobra.Command, v *viper.Viper) error {
 
 	flags.Bool("disable-in-memory-pdf", false, "Disable in-memory PDF processing")
 
+	flags.String("filter-directories", "", "Comma-separated directories to filter")
+
 	flags.String("filter-extensions", "", "Comma-separated extensions to filter")
 	flags.String("document-extensions", "", "Comma-separated document extensions to convert")
 	flags.String("image-extensions", "", "Comma-separated image extensions to convert")
