@@ -120,7 +120,7 @@ func loConversionTargetFormat(ext string) string {
 	case ".doc", ".docm":
 		return "docx"
 	case ".xls", ".xlsx", ".xlsm", ".ods":
-		return "csv"
+		return "pdf"
 	case ".ppt", ".pptx", ".pptm", ".odp":
 		return "pdf"
 	default:
