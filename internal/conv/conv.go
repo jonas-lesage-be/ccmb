@@ -1,7 +1,7 @@
 package conv
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"reflect"
@@ -20,6 +20,21 @@ var (
 	// ErrUnsupportedType is returned when a type is not supported for conversion.
 	ErrUnsupportedType = errors.New("unsupported type for conversion")
 )
+
+var durationUnmarshaler = json.UnmarshalFunc(func(b []byte, d *time.Duration) error {
+	var s string
+	if err := json.Unmarshal(b, &s); err != nil {
+		return fmt.Errorf("failed to unmarshal duration string: %w", err)
+	}
+
+	parsed, err := time.ParseDuration(s)
+	if err != nil {
+		return fmt.Errorf("failed to parse duration: %w", err)
+	}
+
+	*d = parsed
+	return nil
+})
 
 // ConvertValue converts a string value to the specified type T,
 // using the provided converter for unit conversions.
@@ -184,7 +199,8 @@ func bitsOrZero(t reflect.Type, kind reflect.Kind) int {
 
 func parseComplexType[T any](v string, t reflect.Type, def T) (T, bool) {
 	newPtr := reflect.New(t)
-	if err := json.Unmarshal([]byte(v), newPtr.Interface()); err != nil {
+	err := json.Unmarshal([]byte(v), newPtr.Interface(), json.WithUnmarshalers(durationUnmarshaler))
+	if err != nil {
 		return def, false
 	}
 
