@@ -18,17 +18,25 @@ winget install -e --id JohnMacFarlane.Pandoc
 winget install -e --id Gyan.FFmpeg
 ```
 
-Ensure you have a working installation of **Go** and the `golangci-lint` tool for linting. After installing the dependencies, run the following commands to tidy up dependencies and execute the application:
+Ensure you have a working installation of **Go** and the `golangci-lint` tool for formatting and linting. After installing the dependencies, run the following commands to tidy up dependencies and execute the application:
 
 ```bash
 go mod tidy
 go run . --source-dir "./source-dir" --target-dir "./_ccmb-output"
 ```
 
-To compile a minimized, highly optimized production binary stripped of debugging symbol tables:
+## Building from source
+
+The easiest way to build the project is by using the provided Makefile:
 
 ```bash
-go build -ldflags="-s -w" .
+make build
+```
+
+Alternatively, if you don't have `make` installed, you can compile a minimized, highly optimized production binary stripped of debugging symbol tables using the raw Go command:
+
+```bash
+CGO_ENABLED=0 go build -ldflags="-s -w" .
 ```
 
 ## Configuration

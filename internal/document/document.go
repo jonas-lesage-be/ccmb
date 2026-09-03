@@ -21,8 +21,8 @@ type Converter struct {
 	MaxWorkers          int
 
 	FlatPathDelimiter  string
-	EscapedDelimiter  string
-	DecodePlaceholder string
+	EscapedDelimiter   string
+	DecodePlaceholder  string
 	DocumentExtensions map[string]bool
 }
 
@@ -39,8 +39,8 @@ func NewConverter(cfg *config.Config) *Converter {
 		MaxWorkers:          cfg.MaxDocumentWorkers,
 
 		FlatPathDelimiter:  cfg.FlatPathDelimiter,
-		EscapedDelimiter:  cfg.EscapedDelimiter,
-		DecodePlaceholder: cfg.DecodePlaceholder,
+		EscapedDelimiter:   cfg.EscapedDelimiter,
+		DecodePlaceholder:  cfg.DecodePlaceholder,
 		DocumentExtensions: cfg.DocumentExtensions,
 	}
 }
@@ -186,7 +186,6 @@ func (c *Converter) fixMarkdownImageLinks(markdownPath string, mappings map[stri
 
 	return nil
 }
-
 
 func (c *Converter) originalPathFromFlatName(flatName string) string {
 	return config.DecodeFlatName(

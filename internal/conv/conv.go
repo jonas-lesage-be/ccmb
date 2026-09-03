@@ -34,7 +34,7 @@ func ConvertValue[T any](v string, def T) (T, bool) {
 	kind := t.Kind()
 
 	if kind == reflect.String {
-		if val, ok := reflect.ValueOf(v).Convert(t).Interface().(T); ok {
+		if val, ok := reflect.TypeAssert[T](reflect.ValueOf(v).Convert(t)); ok {
 			return val, true
 		}
 		return def, false
@@ -49,7 +49,7 @@ func ConvertValue[T any](v string, def T) (T, bool) {
 		return def, false
 	}
 
-	if val, ok := resPtr.Elem().Interface().(T); ok {
+	if val, ok := reflect.TypeAssert[T](resPtr.Elem()); ok {
 		return val, true
 	}
 	return def, false
@@ -188,7 +188,7 @@ func parseComplexType[T any](v string, t reflect.Type, def T) (T, bool) {
 		return def, false
 	}
 
-	if val, ok := newPtr.Elem().Interface().(T); ok {
+	if val, ok := reflect.TypeAssert[T](newPtr.Elem()); ok {
 		return val, true
 	}
 	return def, false

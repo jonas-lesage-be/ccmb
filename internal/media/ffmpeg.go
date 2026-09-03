@@ -42,6 +42,7 @@ func runFFprobeCommand(ctx context.Context, path string, timeout time.Duration) 
 	return output, nil
 }
 
+// RunFFmpegCommand runs an ffmpeg command with the specified arguments and a timeout.
 func RunFFmpegCommand(ctx context.Context, timeout time.Duration, args ...string) error {
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
