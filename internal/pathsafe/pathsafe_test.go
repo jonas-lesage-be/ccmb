@@ -8,8 +8,6 @@ import (
 )
 
 func TestContains(t *testing.T) {
-	t.Parallel()
-
 	// Arrange
 
 	// Shared base directory used across all cases below.
@@ -62,8 +60,6 @@ func TestContains(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
 			// Act
 			got := Contains(base, tt.target)
 
