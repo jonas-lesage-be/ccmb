@@ -1,4 +1,4 @@
-package conv
+package units
 
 const (
 	// B represents a byte.

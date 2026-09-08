@@ -88,11 +88,13 @@ Ensure your local environment is configured with these project standards before 
     ├── cli/                   # Binds Cobra commands and maps Viper flag schemas.
     ├── config/                # Loads configuration, environment variables, and directory filters.
     ├── document/              # Document conversion that converts unsupported formats.
+    ├── flattener/             # Extracts archive files and flattens directory structures.
     ├── image/                 # Image conversion that converts unsupported formats.
     ├── media/                 # Low-level type classification and metadata extraction.
     ├── pathsafe/              # Sanitizes path segments to prevent directory traversal attacks.
     ├── pipeline/              # Orchestrates the sequential execution of the processing pipeline.
     ├── textmerge/             # Combines text streams into size-constrained text files.
+    ├── units/                 # Defines file size units.
     ├── video/                 # Extracts image sequences from video files.
     └── visualmerge/           # Visual content merger that converts images and videos into PDFs.
 ```

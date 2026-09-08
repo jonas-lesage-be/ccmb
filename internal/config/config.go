@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"ccmb/internal/conv"
+	"ccmb/internal/units"
 )
 
 // Config holds the configuration settings for the application.
@@ -86,9 +86,9 @@ const (
 	defaultVisualPartPrefix  = "visual-part-"
 	defaultTextPartPrefix    = "text-part-"
 
-	defaultMaxArchiveFileBytes int64 = 4 * conv.GiB
-	defaultMaxPDFFileBytes     int64 = 48 * conv.MiB
-	defaultMaxTextFileBytes    int64 = 2 * conv.MiB
+	defaultMaxArchiveFileBytes int64 = 4 * units.GiB
+	defaultMaxPDFFileBytes     int64 = 48 * units.MiB
+	defaultMaxTextFileBytes    int64 = 2 * units.MiB
 
 	defaultDisableInMemoryPDF = false
 

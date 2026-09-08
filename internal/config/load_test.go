@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"ccmb/internal/conv"
+	"ccmb/internal/units"
 )
 
 func TestLoad_WithConfigFiles(t *testing.T) {
@@ -178,9 +178,9 @@ func TestLoad_UsesOverrides(t *testing.T) {
 	v.Set("visual_part_prefix", "vis-part-")
 	v.Set("text_part_prefix", "txt-part-")
 
-	v.Set("max_archive_file_bytes", 2*conv.GiB)
-	v.Set("max_pdf_file_bytes", 32*conv.MiB)
-	v.Set("max_text_file_bytes", 1*conv.MiB)
+	v.Set("max_archive_file_bytes", 2*units.GiB)
+	v.Set("max_pdf_file_bytes", 32*units.MiB)
+	v.Set("max_text_file_bytes", 1*units.MiB)
 
 	v.Set("disable_in_memory_pdf", true)
 
@@ -229,9 +229,9 @@ func TestLoad_UsesOverrides(t *testing.T) {
 	assert.Equal(t, "vis-part-", cfg.VisualPartPrefix)
 	assert.Equal(t, "txt-part-", cfg.TextPartPrefix)
 
-	assert.Equal(t, int64(2*conv.GiB), cfg.MaxArchiveFileBytes)
-	assert.Equal(t, int64(32*conv.MiB), cfg.MaxPDFFileBytes)
-	assert.Equal(t, int64(1*conv.MiB), cfg.MaxTextFileBytes)
+	assert.Equal(t, int64(2*units.GiB), cfg.MaxArchiveFileBytes)
+	assert.Equal(t, int64(32*units.MiB), cfg.MaxPDFFileBytes)
+	assert.Equal(t, int64(1*units.MiB), cfg.MaxTextFileBytes)
 
 	assert.True(t, cfg.DisableInMemoryPDF)
 
