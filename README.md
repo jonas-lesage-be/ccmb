@@ -41,9 +41,9 @@ CGO_ENABLED=0 go build -ldflags="-s -w" .
 
 ## Configuration
 
-The application is configured through command-line flags. These flags are parsed dynamically at execution start and maps values using `spf13/viper` environment and configuration schemas.
+The application is configured via command-line flags that are parsed at startup.
 
-### Core CLI Flags
+### Core CLI flags
 
 - **`-c, --config`**: Path to a JSON, TOML, or YAML configuration file.
 - **`-s, --source-dir`**: Source directory containing raw input files.
@@ -66,11 +66,11 @@ To set up the development environment, ensure you have the following installed:
 - **Go**: Version greater than or equal to the required version in the `go.mod` file.
 - **golangci-lint**: The linting tool used to enforce strict code quality standards.
 
-#### Recommended Extensions
+#### Recommended extensions
 
 If you use VS Code or any derivative code editor (**Antigravity IDE**, **Cursor**, **Windsurf**, etc.), install the recommended extensions at `.vscode/extensions.json`.
 
-### Code Quality & Formatting
+### Code quality and formatting
 
 This project enforces strict code quality standards using modern Go tools to ensure consistent, readable, and secure code:
 
@@ -86,7 +86,7 @@ Ensure your local environment is configured with these project standards before 
 ├── main.go                    # Bootstrap entry point for the ccmb command-line utility.
 └── internal/                  # High-performance processing modules.
     ├── cli/                   # Binds Cobra commands and maps Viper flag schemas.
-    ├── config/                # Loads configuration, environment variables, and directory filters.
+    ├── config/                # Loads configuration.
     ├── document/              # Document conversion that converts unsupported formats.
     ├── flattener/             # Extracts archive files and flattens directory structures.
     ├── image/                 # Image conversion that converts unsupported formats.
@@ -98,6 +98,13 @@ Ensure your local environment is configured with these project standards before 
     ├── video/                 # Extracts image sequences from video files.
     └── visualmerge/           # Visual content merger that converts images and videos into PDFs.
 ```
+
+## Contributing
+
+1. Fork the repository.
+2. Create your feature branch (`git checkout -b feature/name`).
+3. Ensure all code passes `golangci-lint`.
+4. Open a Pull Request.
 
 ## License
 
