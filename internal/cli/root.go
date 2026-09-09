@@ -57,15 +57,7 @@ func NewRootCommand(ctx context.Context, v *viper.Viper) *cobra.Command {
 				return fmt.Errorf("failed to load configuration: %w", err)
 			}
 
-			logLevel := slog.LevelInfo
-			if cfg.Verbose {
-				logLevel = slog.LevelDebug
-			}
-
-			logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
-				Level: logLevel,
-			}))
-			slog.SetDefault(logger)
+			initLogger(cfg.Verbose)
 
 			p := pipeline.NewPipeline(cfg)
 			if err := p.Execute(ctx); err != nil {
@@ -78,7 +70,8 @@ func NewRootCommand(ctx context.Context, v *viper.Viper) *cobra.Command {
 
 	cmd.SetContext(ctx)
 
-	if err := bindFlags(cmd, v); err != nil {
+	flags := createFlags(cmd)
+	if err := bindFlags(flags, v); err != nil {
 		slog.Error("failed to initialize flags", "err", err)
 		os.Exit(1)
 	}
@@ -86,13 +79,25 @@ func NewRootCommand(ctx context.Context, v *viper.Viper) *cobra.Command {
 	return cmd
 }
 
-func bindFlags(cmd *cobra.Command, v *viper.Viper) error {
+func initLogger(verbose bool) {
+	logLevel := slog.LevelInfo
+	if verbose {
+		logLevel = slog.LevelDebug
+	}
+
+	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+		Level: logLevel,
+	}))
+	slog.SetDefault(logger)
+}
+
+func createFlags(cmd *cobra.Command) *pflag.FlagSet {
 	flags := cmd.Flags()
 
 	flags.StringP("config", "c", "", "Path to a JSON, TOML, or YAML configuration file")
 
-	flags.StringP("source-dir", "s", "", "Directory to process")
-	flags.StringP("target-dir", "t", "", "Directory for generated files")
+	flags.StringP("source-dir", "s", "", "Source directory containing raw input files")
+	flags.StringP("target-dir", "t", "", "Target directory to store output files")
 	flags.String(
 		"target-dir-permissions",
 		"",
@@ -152,6 +157,10 @@ func bindFlags(cmd *cobra.Command, v *viper.Viper) error {
 	flags.Bool("skip-visual-merger", false, "Skip the visual merger")
 	flags.Bool("skip-text-merger", false, "Skip the text merger")
 
+	return flags
+}
+
+func bindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
 	var bindErr error
 	flags.VisitAll(func(flag *pflag.Flag) {
 		if flag.Name == "config" || bindErr != nil {

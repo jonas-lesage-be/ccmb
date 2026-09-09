@@ -45,17 +45,17 @@ The application is configured through command-line flags. These flags are parsed
 
 ### Core CLI Flags
 
-- **`-s, --source-dir`**: The target directory containing raw input asset bundles or zip containers.
-- **`-t, --target-dir`**: Destination folder where the size-bounded PDF books and textbooks are compiled.
-- **`-c, --config`**: Optional path to a JSON, TOML, or YAML file to override pipeline variable allocations.
-- **`--skip-flattener`**: Skips the initial nested zip/tar decompression stages.
-- **`--skip-document-converter`**: Bypasses rendering document layouts (`.docx`, `.xlsx`) via external engines.
-- **`--skip-image-converter`**: Prevents static vector re-scaling and canvas preprocessing filters.
-- **`--skip-video-extractor`**: Disables parallel multi-threaded GPU video extraction completely.
-- **`--skip-visual-merger`**: Prevents assembling watermarked PDF album batches.
-- **`--skip-text-merger`**: Prevents compiling concatenated textbooks from source logs.
-- **`--video-fps`**: Frame extraction frequency target slice per second (default: `1.0`).
-- **`-v, --verbose`**: Activates detailed micro-operation debug level logging tracing outputs.
+- **`-c, --config`**: Path to a JSON, TOML, or YAML configuration file.
+- **`-s, --source-dir`**: Source directory containing raw input files.
+- **`-t, --target-dir`**: Target directory to store output files.
+- **`--video-fps`**: Frames per second for video frame extraction (default: `1.0`).
+- **`--skip-flattener`**: Skips the flattener.
+- **`--skip-document-converter`**: Skips the document converter.
+- **`--skip-image-converter`**: Skips the image converter.
+- **`--skip-video-extractor`**: Skips the video extractor.
+- **`--skip-visual-merger`**: Skips the visual merger.
+- **`--skip-text-merger`**: Skips the text merger.
+- **`-v, --verbose`**: Enable verbose logging.
 
 ## Development
 

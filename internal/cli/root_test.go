@@ -161,9 +161,9 @@ func TestNewRootCommand_FlagsOverrideDefaults(t *testing.T) {
 		"--visual-part-prefix", "vis-part-",
 		"--text-part-prefix", "txt-part-",
 
-		"--max-archive-file-bytes", "2147483648", // 2 * conv.GiB
-		"--max-pdf-file-bytes", "33554432", // 32 * conv.MiB
-		"--max-text-file-bytes", "1048576", // 1 * conv.MiB
+		"--max-archive-file-bytes", "2147483648", // 2 GiB
+		"--max-pdf-file-bytes", "33554432", // 32 MiB
+		"--max-text-file-bytes", "1048576", // 1 MiB
 
 		"--disable-in-memory-pdf=true",
 
