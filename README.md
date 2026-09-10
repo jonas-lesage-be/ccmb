@@ -79,7 +79,7 @@ This project enforces strict code quality standards using modern Go tools to ens
 
 Ensure your local environment is configured with these project standards before submitting code.
 
-## Layout
+## Project layout
 
 ```text
 ├── doc.go                     # Documentation for the main application entry point.
