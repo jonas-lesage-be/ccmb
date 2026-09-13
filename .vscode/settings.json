@@ -16,7 +16,7 @@
   "go.lintTool": "golangci-lint",
   "go.useLanguageServer": true,
 
-  "[go]": {
+  "[go][go.mod][go.sum][go.work][go.work.sum]": {
     "editor.codeActionsOnSave": {
       "source.fixAll": "explicit"
     },
