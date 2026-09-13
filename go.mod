@@ -1,18 +1,18 @@
 module ccmb
 
-go 1.27.0
+go 1.27.1
 
 require (
 	github.com/gabriel-vasile/mimetype v1.4.15
 	github.com/go-viper/mapstructure/v2 v2.5.0
-	github.com/klauspost/compress v1.19.2
+	github.com/klauspost/compress v1.20.0
 	github.com/pdfcpu/pdfcpu v0.15.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.12.1
 	github.com/tdewolff/canvas v0.0.0-20260901160717-dae8cd8e19a7
-	golang.org/x/sync v0.22.0
+	golang.org/x/sync v0.23.0
 )
 
 require (

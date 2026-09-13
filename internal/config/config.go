@@ -17,11 +17,12 @@ type Config struct {
 	TargetFilePermissions os.FileMode `mapstructure:"target_file_permissions"`
 	TextFilePermissions   os.FileMode `mapstructure:"text_file_permissions"`
 
-	MaxFlattenerWorkers    int           `mapstructure:"max_flattener_workers"`
-	MaxDocumentWorkers     int           `mapstructure:"max_document_workers"`
-	MaxImageWorkers        int           `mapstructure:"max_image_workers"`
-	MaxVideoWorkers        int           `mapstructure:"max_video_workers"`
-	MaxVisualMergeWorkers  int           `mapstructure:"max_visual_merge_workers"`
+	MaxFlattenerWorkers   int `mapstructure:"max_flattener_workers"`
+	MaxDocumentWorkers    int `mapstructure:"max_document_workers"`
+	MaxImageWorkers       int `mapstructure:"max_image_workers"`
+	MaxVideoWorkers       int `mapstructure:"max_video_workers"`
+	MaxVisualMergeWorkers int `mapstructure:"max_visual_merge_workers"`
+
 	ImageConversionTimeout time.Duration `mapstructure:"image_conversion_timeout"`
 	VideoExtractTimeout    time.Duration `mapstructure:"video_extract_timeout"`
 
@@ -68,12 +69,13 @@ const (
 	defaultTargetFilePermissions os.FileMode = 0o600
 	defaultTextFilePermissions   os.FileMode = 0o600
 
-	halfCPUFraction               = 1.0 / 2
-	defaultMaxFlattenerWorkers    = halfCPUFraction
-	defaultMaxDocumentWorkers     = halfCPUFraction
-	defaultMaxImageWorkers        = halfCPUFraction
-	defaultMaxVideoWorkers        = halfCPUFraction
-	defaultMaxVisualMergeWorkers  = 1.0
+	halfCPUFraction              = 1.0 / 2
+	defaultMaxFlattenerWorkers   = halfCPUFraction
+	defaultMaxDocumentWorkers    = halfCPUFraction
+	defaultMaxImageWorkers       = halfCPUFraction
+	defaultMaxVideoWorkers       = halfCPUFraction
+	defaultMaxVisualMergeWorkers = 1.0
+
 	defaultImageConversionTimeout = 15 * time.Second
 	defaultVideoExtractTimeout    = 1 * time.Minute
 

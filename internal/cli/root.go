@@ -119,6 +119,7 @@ func createFlags(cmd *cobra.Command) *pflag.FlagSet {
 	flags.Int("max-image-workers", 0, "Maximum concurrent image workers")
 	flags.Int("max-video-workers", 0, "Maximum concurrent video workers")
 	flags.Int("max-visual-merge-workers", 0, "Maximum concurrent visual merge workers")
+
 	flags.Duration("image-conversion-timeout", 0, "Maximum duration for an image conversion")
 	flags.Duration("video-extract-timeout", 0, "Maximum duration for video frame extraction")
 

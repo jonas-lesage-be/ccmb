@@ -32,6 +32,7 @@ func NewViper() *viper.Viper {
 	v.SetDefault("max_image_workers", workerCountFromPct(defaultMaxImageWorkers))
 	v.SetDefault("max_video_workers", workerCountFromPct(defaultMaxVideoWorkers))
 	v.SetDefault("max_visual_merge_workers", workerCountFromPct(defaultMaxVisualMergeWorkers))
+
 	v.SetDefault("image_conversion_timeout", defaultImageConversionTimeout)
 	v.SetDefault("video_extract_timeout", defaultVideoExtractTimeout)
 
