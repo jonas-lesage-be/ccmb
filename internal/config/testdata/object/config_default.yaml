@@ -86,7 +86,6 @@ visual_extensions:
 verbose: true
 skip_flattener: true
 skip_tar_flattener: true
-skip_filter: true
 skip_image_converter: true
 skip_video_extractor: true
 skip_visual_merger: true

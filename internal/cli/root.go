@@ -151,7 +151,6 @@ func createFlags(cmd *cobra.Command) *pflag.FlagSet {
 	flags.BoolP("verbose", "v", false, "Enable verbose logging")
 	flags.Bool("skip-flattener", false, "Skip the flattener")
 	flags.Bool("skip-tar-flattener", false, "Skip TAR flattener support")
-	flags.Bool("skip-filter", false, "Skip the filter")
 	flags.Bool("skip-document-converter", false, "Skip the document converter")
 	flags.Bool("skip-image-converter", false, "Skip the image converter")
 	flags.Bool("skip-video-extractor", false, "Skip the video extractor")
