@@ -101,7 +101,7 @@ winget:
     repository:
       owner: "microsoft"
       name: "winget-pkgs"
-      branch: "master"
+      branch: "ccmb-{{.Version}}"
       token: "{{ .Env.WINGET_GITHUB_TOKEN }}"
       pull_request:
         enabled: true
