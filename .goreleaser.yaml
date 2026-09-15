@@ -61,7 +61,7 @@ dockers_v2:
       "org.opencontainers.image.licenses": "MIT"
       "org.opencontainers.image.version": "{{ .Version }}"
       "org.opencontainers.image.revision": "{{ .FullCommit }}"
-      "org.opencontainers.image.description": |-
+      "org.opencontainers.image.description": >-
         Context Combiner (ccmb) is a command-line tool
         that flattens, filters, converts, and merges files.
 
@@ -73,10 +73,10 @@ winget:
     license: "MIT"
     license_url: "https://github.com/jonas-lesage-be/ccmb/blob/main/README.md"
 
-    short_description: |-
+    short_description: >-
       Context Combiner (ccmb) is a command-line tool
       that flattens, filters, converts, and merges files.
-    description: |-
+    description: >-
       Context Combiner (ccmb) is a command-line tool
       that flattens, filters, converts, and merges files
       from a source directory into a target directory.
@@ -117,10 +117,10 @@ chocolateys:
     project_url: "https://github.com/jonas-lesage-be/ccmb"
     license_url: "https://github.com/jonas-lesage-be/ccmb/blob/main/README.md"
 
-    summary: |-
+    summary: >-
       Context Combiner (ccmb) is a command-line tool
       that flattens, filters, converts, and merges files.
-    description: |-
+    description: >-
       Context Combiner (ccmb) is a command-line tool
       that flattens, filters, converts, and merges files
       from a source directory into a target directory.
@@ -135,7 +135,7 @@ chocolateys:
 scoops:
   - name: ccmb
     homepage: "https://github.com/jonas-lesage-be/ccmb"
-    description: |-
+    description: >-
       Context Combiner (ccmb) is a command-line tool
       that flattens, filters, converts, and merges files.
     license: "MIT"
@@ -150,7 +150,7 @@ scoops:
 homebrew_casks:
   - name: ccmb
     homepage: "https://github.com/jonas-lesage-be/ccmb"
-    description: |-
+    description: >-
       Context Combiner (ccmb) is a command-line tool
       that flattens, filters, converts, and merges files.
     license: "MIT"
@@ -172,7 +172,7 @@ nfpms:
       - archlinux
 
     license: "MIT"
-    description: |-
+    description: >-
       Context Combiner (ccmb) is a command-line tool
       that flattens, filters, converts, and merges files.
 
