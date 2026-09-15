@@ -99,12 +99,16 @@ winget:
       - cross-platform
 
     repository:
-      owner: "microsoft"
+      owner: "jonas-lesage-be"
       name: "winget-pkgs"
       branch: "ccmb-{{.Version}}"
       token: "{{ .Env.WINGET_GITHUB_TOKEN }}"
       pull_request:
         enabled: true
+        base:
+          owner: "microsoft"
+          name: "winget-pkgs"
+          branch: "master"
 
 chocolateys:
   - name: ccmb
