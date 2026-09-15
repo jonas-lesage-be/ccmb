@@ -1,0 +1,177 @@
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: ccmb-build
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - windows
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+
+archives:
+  - id: archive-zip-or-gzip
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    files:
+      - LICENSE
+      - README.md
+
+  - id: archive-zstandard
+    formats:
+      - tar.zst
+    files:
+      - LICENSE
+      - README.md
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+dockers_v2:
+  - ids:
+      - ccmb-build
+
+    images:
+      - "contextcombiner/ccmb"
+      - "ghcr.io/jonas-lesage-be/ccmb"
+    tags:
+      - "{{ .Version }}"
+      - "latest"
+
+    labels:
+      "org.opencontainers.image.title": "ccmb"
+      "org.opencontainers.image.source": "https://github.com/jonas-lesage-be/ccmb"
+      "org.opencontainers.image.licenses": "MIT"
+      "org.opencontainers.image.version": "{{ .Version }}"
+      "org.opencontainers.image.revision": "{{ .FullCommit }}"
+      "org.opencontainers.image.description": |-
+        Context Combiner (ccmb) is a command-line tool
+        that flattens, filters, converts, and merges files.
+
+winget:
+  - package_identifier: "ccmb.ccmb"
+    name: "ccmb"
+    publisher: "Jonas Lesage"
+    homepage: "https://github.com/jonas-lesage-be/ccmb"
+    license: "MIT"
+    license_url: "https://github.com/jonas-lesage-be/ccmb/blob/main/README.md"
+
+    short_description: |-
+      Context Combiner (ccmb) is a command-line tool
+      that flattens, filters, converts, and merges files.
+    description: |-
+      Context Combiner (ccmb) is a command-line tool
+      that flattens, filters, converts, and merges files
+      from a source directory into a target directory.
+
+    ids:
+      - archive-zip-or-gzip
+
+    tags:
+      - llm
+      - context
+      - cli
+      - utility
+      - tool
+      - file-merger
+      - file-converter
+      - ffmpeg
+      - pdf
+      - ai-tools
+      - text-processing
+      - cross-platform
+
+    repository:
+      owner: "microsoft"
+      name: "winget-pkgs"
+      branch: "master"
+      token: "{{ .Env.WINGET_GITHUB_TOKEN }}"
+      pull_request:
+        enabled: true
+
+chocolateys:
+  - name: ccmb
+    authors: "Jonas Lesage"
+    owners: "Jonas Lesage"
+    project_url: "https://github.com/jonas-lesage-be/ccmb"
+    license_url: "https://github.com/jonas-lesage-be/ccmb/blob/main/README.md"
+
+    summary: |-
+      Context Combiner (ccmb) is a command-line tool
+      that flattens, filters, converts, and merges files.
+    description: |-
+      Context Combiner (ccmb) is a command-line tool
+      that flattens, filters, converts, and merges files
+      from a source directory into a target directory.
+
+    ids:
+      - archive-zip-or-gzip
+
+    tags: "llm context cli utility tool file-merger file-converter ffmpeg pdf ai foss admin"
+
+    api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
+
+scoops:
+  - name: ccmb
+    homepage: "https://github.com/jonas-lesage-be/ccmb"
+    description: |-
+      Context Combiner (ccmb) is a command-line tool
+      that flattens, filters, converts, and merges files.
+    license: "MIT"
+    ids:
+      - archive-zip-or-gzip
+
+    repository:
+      owner: jonas-lesage-be
+      name: scoop-bucket
+    directory: bucket
+
+homebrew_casks:
+  - name: ccmb
+    homepage: "https://github.com/jonas-lesage-be/ccmb"
+    description: |-
+      Context Combiner (ccmb) is a command-line tool
+      that flattens, filters, converts, and merges files.
+    license: "MIT"
+    ids:
+      - archive-zip-or-gzip
+
+    repository:
+      owner: jonas-lesage-be
+      name: homebrew-tap
+    directory: Casks
+
+nfpms:
+  - id: ccmb-nfpm
+    package_name: ccmb
+    formats:
+      - apk
+      - deb
+      - rpm
+      - archlinux
+
+    license: "MIT"
+    description: |-
+      Context Combiner (ccmb) is a command-line tool
+      that flattens, filters, converts, and merges files.
+
+    vendor: "Jonas Lesage"
+    maintainer: "Jonas Lesage <jonas.lesage@outlook.com>"
+    homepage: "https://github.com/jonas-lesage-be/ccmb"

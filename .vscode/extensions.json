@@ -1,5 +1,6 @@
 {
   "recommendations": [
+    "dprint.dprint",
     "esbenp.prettier-vscode",
     "golang.go",
     "shardulm94.trailing-spaces",
