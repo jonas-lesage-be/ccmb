@@ -25,18 +25,25 @@ builds:
       - -s -w
 
 archives:
-  - id: archive-zip-or-gzip
+  - id: binary
     formats:
-      - tar.gz
-    format_overrides:
-      - goos: windows
-        formats:
-          - zip
+      - binary
+
+  - id: archive-zip
+    formats:
+      - zip
     files:
       - LICENSE
       - README.md
 
-  - id: archive-zstandard
+  - id: archive-tar-gz
+    formats:
+      - tar.gz
+    files:
+      - LICENSE
+      - README.md
+
+  - id: archive-tar-zst
     formats:
       - tar.zst
     files:
@@ -88,7 +95,7 @@ winget:
       from a source directory into a target directory.
 
     ids:
-      - archive-zip-or-gzip
+      - binary
 
     tags:
       - llm
@@ -132,7 +139,7 @@ chocolateys:
       from a source directory into a target directory.
 
     ids:
-      - archive-zip-or-gzip
+      - archive-zip
 
     tags: "llm context cli utility tool file-merger file-converter ffmpeg pdf ai foss admin"
 
@@ -146,7 +153,7 @@ scoops:
       that flattens, filters, converts, and merges files.
     license: "MIT"
     ids:
-      - archive-zip-or-gzip
+      - archive-zip
 
     repository:
       owner: jonas-lesage-be
@@ -161,7 +168,7 @@ homebrew_casks:
       that flattens, filters, converts, and merges files.
     license: "MIT"
     ids:
-      - archive-zip-or-gzip
+      - archive-zip
 
     repository:
       owner: jonas-lesage-be

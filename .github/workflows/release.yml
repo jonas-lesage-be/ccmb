@@ -10,7 +10,7 @@ permissions:
   packages: write
 
 jobs:
-  goreleaser:
+  goreleaser-unix:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -48,12 +48,12 @@ jobs:
         with:
           distribution: goreleaser
           version: "~> v2"
-          args: release --clean --skip=chocolatey
+          args: release --clean --skip=winget,chocolatey,scoop
         env:
           GITHUB_TOKEN: ${{ secrets.GORELEASER_GITHUB_TOKEN }}
           WINGET_GITHUB_TOKEN: ${{ secrets.WINGET_GITHUB_TOKEN }}
 
-  goreleaser-chocolatey:
+  goreleaser-windows:
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -72,7 +72,7 @@ jobs:
         with:
           distribution: goreleaser
           version: "~> v2"
-          args: release --clean --skip=docker,winget,homebrew,scoop,nfpm,announce
+          args: release --clean --skip=docker,homebrew,nfpm,announce
         env:
           GITHUB_TOKEN: ${{ secrets.GORELEASER_GITHUB_TOKEN }}
           CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
