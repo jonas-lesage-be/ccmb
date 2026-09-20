@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"ccmb/internal/asserts"
 	"ccmb/internal/units"
 )
 
@@ -56,8 +57,8 @@ func TestLoad_WithConfigFiles(t *testing.T) {
 			assert.Equal(t, 15*time.Second, cfg.ImageConversionTimeout)
 			assert.Equal(t, 1*time.Minute, cfg.VideoExtractTimeout)
 
-			assert.InDelta(t, 300/25.4, cfg.SvgCanvasResolution, 0.000001)
-			assert.InDelta(t, 60.0, cfg.VideoFps, 0.000001)
+			asserts.RelativeEq(t, 300/25.4, cfg.SvgCanvasResolution)
+			asserts.RelativeEq(t, 60.0, cfg.VideoFps)
 
 			assert.Equal(t, 128, cfg.EstFileCount)
 			assert.Equal(t, "--", cfg.FlatPathDelimiter)
@@ -220,8 +221,8 @@ func TestLoad_UsesOverrides(t *testing.T) {
 	assert.Equal(t, 20*time.Second, cfg.ImageConversionTimeout)
 	assert.Equal(t, 2*time.Minute, cfg.VideoExtractTimeout)
 
-	assert.InDelta(t, 600.0, cfg.SvgCanvasResolution, 0.000001)
-	assert.InDelta(t, 24.0, cfg.VideoFps, 0.000001)
+	asserts.RelativeEq(t, 600.0, cfg.SvgCanvasResolution)
+	asserts.RelativeEq(t, 24.0, cfg.VideoFps)
 
 	assert.Equal(t, 512, cfg.EstFileCount)
 	assert.Equal(t, "__", cfg.FlatPathDelimiter)
