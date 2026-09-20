@@ -1,17 +1,21 @@
 package config
 
 import (
+	"embed"
 	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"ccmb/internal/asserts"
 	"ccmb/internal/units"
 )
+
+//go:embed testdata/*
+var testdataFS embed.FS
 
 func TestLoad_WithConfigFiles(t *testing.T) {
 	t.Parallel()
@@ -34,11 +38,20 @@ func TestLoad_WithConfigFiles(t *testing.T) {
 			t.Parallel()
 
 			// Arrange
-			path := filepath.Join("testdata", filename)
+			relPath := "testdata/" + filename
+			content, err := testdataFS.ReadFile(relPath)
+			require.NoError(t, err, "failed to read embedded file: %s", relPath)
+
+			memFS := afero.NewMemMapFs()
+			absPath := "/virtual/" + relPath
+			err = afero.WriteFile(memFS, absPath, content, 0o600)
+			require.NoError(t, err)
+
 			v := NewViper()
+			v.SetFs(memFS)
 
 			// Act
-			cfg, err := Load(v, path)
+			cfg, err := Load(v, absPath)
 
 			// Assert
 			require.NoError(t, err)
@@ -159,7 +172,10 @@ func TestLoad_UsesOverrides(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
+	memFS := afero.NewMemMapFs()
 	v := NewViper()
+	v.SetFs(memFS)
+
 	v.Set("source_dir", "override")
 	v.Set("target_dir", "overridden_target")
 	v.Set("target_dir_permissions", 0o770)

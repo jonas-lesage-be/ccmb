@@ -20,6 +20,9 @@
   "go.lintTool": "golangci-lint",
   "go.useLanguageServer": true,
 
+  "go.testTags": "integration",
+  "go.testFlags": ["-v"],
+
   "[go][go.mod][go.sum][go.work][go.work.sum]": {
     "editor.codeActionsOnSave": {
       "source.fixAll": "explicit"
@@ -32,7 +35,8 @@
 
   "gopls": {
     "formatting.gofumpt": false,
-    "ui.diagnostic.staticcheck": true
+    "ui.diagnostic.staticcheck": true,
+    "build.buildFlags": ["-tags=integration"]
   },
 
   "[toml]": {

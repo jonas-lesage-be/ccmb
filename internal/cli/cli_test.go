@@ -14,13 +14,13 @@ import (
 	"ccmb/internal/units"
 )
 
-func TestNewRootCommand_UsesDefaultsWithoutFlags(t *testing.T) {
+func TestNewCommand_UsesDefaultsWithoutFlags(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
 	ctx := context.Background()
 	v := config.NewViper()
-	cmd := NewRootCommand(ctx, v)
+	cmd := NewCommand(ctx, v)
 
 	// Simulate an empty terminal call where the user passes zero flags.
 	flagArgs := []string{}
@@ -129,13 +129,13 @@ func TestNewRootCommand_UsesDefaultsWithoutFlags(t *testing.T) {
 	assert.False(t, cfg.SkipTextMerger)
 }
 
-func TestNewRootCommand_FlagsOverrideDefaults(t *testing.T) {
+func TestNewCommand_FlagsOverrideDefaults(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
 	ctx := context.Background()
 	v := config.NewViper()
-	cmd := NewRootCommand(ctx, v)
+	cmd := NewCommand(ctx, v)
 
 	// Simulate user terminal inputs with overrides for every single field.
 	flagArgs := []string{

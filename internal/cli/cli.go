@@ -38,8 +38,8 @@ ccmb -s /path/to/source -t /path/to/target
 `)
 }
 
-// NewRootCommand creates the ccmb command.
-func NewRootCommand(ctx context.Context, v *viper.Viper) *cobra.Command {
+// NewCommand creates the ccmb command.
+func NewCommand(ctx context.Context, v *viper.Viper) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "ccmb",
 		Short:   "Context Combiner: flatten, filter, convert, and merge files.",
