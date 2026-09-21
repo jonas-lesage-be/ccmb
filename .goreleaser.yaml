@@ -81,8 +81,9 @@ dockers_v2:
 winget:
   - package_identifier: "ccmb.ccmb"
     name: "ccmb"
-    publisher: "Jonas Lesage"
     homepage: "https://github.com/jonas-lesage-be/ccmb"
+
+    publisher: "Jonas Lesage"
     license: "MIT"
     license_url: "https://github.com/jonas-lesage-be/ccmb/blob/main/README.md"
 
@@ -93,10 +94,6 @@ winget:
       Context Combiner (ccmb) is a command-line tool
       that flattens, filters, converts, and merges files
       from a source directory into a target directory.
-
-    ids:
-      - binary
-
     tags:
       - llm
       - context
@@ -110,6 +107,9 @@ winget:
       - ai-tools
       - text-processing
       - cross-platform
+
+    ids:
+      - binary
 
     repository:
       owner: "jonas-lesage-be"
@@ -125,11 +125,16 @@ winget:
 
 chocolateys:
   - name: ccmb
+    ids:
+      - archive-zip
+    tags: "llm context cli utility tool file-merger file-converter ffmpeg pdf ai foss admin"
+
     authors: "Jonas Lesage"
     owners: "Jonas Lesage"
-    project_url: "https://github.com/jonas-lesage-be/ccmb"
+    copyright: "Copyright (c) 2026 Jonas Lesage"
     license_url: "https://github.com/jonas-lesage-be/ccmb/blob/main/README.md"
 
+    project_url: "https://github.com/jonas-lesage-be/ccmb"
     summary: >-
       Context Combiner (ccmb) is a command-line tool
       that flattens, filters, converts, and merges files.
@@ -137,11 +142,6 @@ chocolateys:
       Context Combiner (ccmb) is a command-line tool
       that flattens, filters, converts, and merges files
       from a source directory into a target directory.
-
-    ids:
-      - archive-zip
-
-    tags: "llm context cli utility tool file-merger file-converter ffmpeg pdf ai foss admin"
 
     api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
 
@@ -167,13 +167,13 @@ homebrew_casks:
       Context Combiner (ccmb) is a command-line tool
       that flattens, filters, converts, and merges files.
     license: "MIT"
-    ids:
-      - archive-zip
-
     repository:
       owner: jonas-lesage-be
       name: homebrew-tap
     directory: Casks
+
+    ids:
+      - archive-zip
 
 nfpms:
   - id: ccmb-nfpm
@@ -184,11 +184,11 @@ nfpms:
       - rpm
       - archlinux
 
-    license: "MIT"
+    homepage: "https://github.com/jonas-lesage-be/ccmb"
     description: >-
       Context Combiner (ccmb) is a command-line tool
       that flattens, filters, converts, and merges files.
 
+    license: "MIT"
     vendor: "Jonas Lesage"
     maintainer: "Jonas Lesage <jonas.lesage@outlook.com>"
-    homepage: "https://github.com/jonas-lesage-be/ccmb"
