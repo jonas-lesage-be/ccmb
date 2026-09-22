@@ -64,6 +64,7 @@ func TestLoad_WithConfigFiles(t *testing.T) {
 			assert.Equal(t, os.FileMode(0o600), cfg.TextFilePermissions)
 
 			assert.Equal(t, 8, cfg.MaxFlattenerWorkers)
+			assert.Equal(t, 8, cfg.MaxDocumentWorkers)
 			assert.Equal(t, 8, cfg.MaxImageWorkers)
 			assert.Equal(t, 4, cfg.MaxVideoWorkers)
 			assert.Equal(t, 8, cfg.MaxVisualMergeWorkers)
@@ -184,8 +185,10 @@ func TestLoad_UsesOverrides(t *testing.T) {
 	v.Set("text_file_permissions", 0o660)
 
 	v.Set("max_flattener_workers", 10)
+	v.Set("max_document_workers", 10)
 	v.Set("max_image_workers", 20)
 	v.Set("max_video_workers", 15)
+	v.Set("max_visual_merge_workers", 5)
 	v.Set("image_conversion_timeout", "20s")
 	v.Set("video_extract_timeout", "2m")
 	v.Set("svg_canvas_resolution", 600.0)
@@ -235,8 +238,10 @@ func TestLoad_UsesOverrides(t *testing.T) {
 	assert.Equal(t, os.FileMode(0o660), cfg.TextFilePermissions)
 
 	assert.Equal(t, 10, cfg.MaxFlattenerWorkers)
+	assert.Equal(t, 10, cfg.MaxDocumentWorkers)
 	assert.Equal(t, 20, cfg.MaxImageWorkers)
 	assert.Equal(t, 15, cfg.MaxVideoWorkers)
+	assert.Equal(t, 5, cfg.MaxVisualMergeWorkers)
 	assert.Equal(t, 20*time.Second, cfg.ImageConversionTimeout)
 	assert.Equal(t, 2*time.Minute, cfg.VideoExtractTimeout)
 
