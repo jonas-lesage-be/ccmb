@@ -60,6 +60,7 @@ func TestLoad_WithConfigFiles(t *testing.T) {
 			assert.Equal(t, ".", cfg.SourceDir)
 			assert.Equal(t, "./_ccmb-output", cfg.TargetDir)
 			assert.Equal(t, os.FileMode(0o700), cfg.TargetDirPermissions)
+			assert.Equal(t, os.FileMode(0o600), cfg.TargetFilePermissions)
 			assert.Equal(t, os.FileMode(0o600), cfg.TextFilePermissions)
 
 			assert.Equal(t, 8, cfg.MaxFlattenerWorkers)
@@ -179,6 +180,7 @@ func TestLoad_UsesOverrides(t *testing.T) {
 	v.Set("source_dir", "override")
 	v.Set("target_dir", "overridden_target")
 	v.Set("target_dir_permissions", 0o770)
+	v.Set("target_file_permissions", 0o660)
 	v.Set("text_file_permissions", 0o660)
 
 	v.Set("max_flattener_workers", 10)
@@ -229,6 +231,7 @@ func TestLoad_UsesOverrides(t *testing.T) {
 	assert.Equal(t, "override", cfg.SourceDir)
 	assert.Equal(t, "overridden_target", cfg.TargetDir)
 	assert.Equal(t, os.FileMode(0o770), cfg.TargetDirPermissions)
+	assert.Equal(t, os.FileMode(0o660), cfg.TargetFilePermissions)
 	assert.Equal(t, os.FileMode(0o660), cfg.TextFilePermissions)
 
 	assert.Equal(t, 10, cfg.MaxFlattenerWorkers)
