@@ -122,13 +122,11 @@ func (p *Pipeline) Execute(ctx context.Context) error {
 		}
 	}
 
-	if !stepSkipped {
-		return nil
-	}
-
-	slog.Info("Copying files from temporary directory to target directory")
-	if err := p.flushTmpDirToTarget(tmpDir); err != nil {
-		return fmt.Errorf("failed to flush to target directory: %w", err)
+	if stepSkipped {
+		slog.Info("Copying files from temporary directory to target directory")
+		if err := p.flushTmpDirToTarget(tmpDir); err != nil {
+			return fmt.Errorf("failed to flush to target directory: %w", err)
+		}
 	}
 
 	slog.Info("Pipeline execution successfully completed", "duration", time.Since(startTime))
