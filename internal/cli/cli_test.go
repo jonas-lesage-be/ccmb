@@ -239,9 +239,13 @@ func TestNewCommand_FlagsOverrideDefaults(t *testing.T) {
 	assert.True(t, cfg.DocumentExtensions[".doc1"])
 	assert.True(t, cfg.DocumentExtensions[".doc2"])
 	assert.True(t, cfg.ImageExtensions[".img1"])
+	assert.True(t, cfg.ImageExtensions[".img2"])
 	assert.True(t, cfg.SupportedImageExtensions[".s1"])
+	assert.True(t, cfg.SupportedImageExtensions[".s2"])
 	assert.True(t, cfg.VideoExtensions[".v1"])
+	assert.True(t, cfg.VideoExtensions[".v2"])
 	assert.True(t, cfg.VisualExtensions[".v3"])
+	assert.True(t, cfg.VisualExtensions[".v4"])
 
 	assert.True(t, cfg.Verbose)
 	assert.True(t, cfg.SkipFlattener)

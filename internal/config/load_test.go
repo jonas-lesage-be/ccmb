@@ -210,6 +210,7 @@ func TestLoad_UsesOverrides(t *testing.T) {
 	v.Set("filter_directories", "dir1,dir2,dir3")
 
 	v.Set("filter_extensions", "val1,val2")
+	v.Set("document_extensions", "doc1,doc2")
 	v.Set("image_extensions", "img1,img2")
 	v.Set("supported_image_extensions", "s1,s2")
 	v.Set("video_extensions", "v1,v2")
@@ -267,10 +268,16 @@ func TestLoad_UsesOverrides(t *testing.T) {
 
 	assert.True(t, cfg.FilterExtensions[".val1"])
 	assert.True(t, cfg.FilterExtensions[".val2"])
+	assert.True(t, cfg.DocumentExtensions[".doc1"])
+	assert.True(t, cfg.DocumentExtensions[".doc2"])
 	assert.True(t, cfg.ImageExtensions[".img1"])
+	assert.True(t, cfg.ImageExtensions[".img2"])
 	assert.True(t, cfg.SupportedImageExtensions[".s1"])
+	assert.True(t, cfg.SupportedImageExtensions[".s2"])
 	assert.True(t, cfg.VideoExtensions[".v1"])
+	assert.True(t, cfg.VideoExtensions[".v2"])
 	assert.True(t, cfg.VisualExtensions[".v3"])
+	assert.True(t, cfg.VisualExtensions[".v4"])
 
 	assert.Equal(t, !defaultVerbose, cfg.Verbose)
 	assert.Equal(t, !defaultSkipFlattener, cfg.SkipFlattener)
