@@ -110,6 +110,18 @@ func (p *Pipeline) Execute(ctx context.Context) error {
 	tmpCfg := *p.cfg
 	tmpCfg.TargetDir = tmpDir
 
+	allEarlyStepsSkipped := flattenerStep.ShouldSkip(p.cfg) &&
+		documentConverterStep.ShouldSkip(p.cfg) &&
+		imageConverterStep.ShouldSkip(p.cfg) &&
+		videoExtractorStep.ShouldSkip(p.cfg)
+
+	if allEarlyStepsSkipped {
+		slog.Info("All early steps skipped. Pre-populating temporary directory from source")
+		if err := p.copyDirContents(p.cfg.SourceDir, tmpDir); err != nil {
+			return fmt.Errorf("failed to pre-populate temporary directory: %w", err)
+		}
+	}
+
 	stepSkipped := false
 	for _, step := range p.steps {
 		if step.ShouldSkip(p.cfg) {
@@ -224,6 +236,29 @@ func (p *Pipeline) copyFile(src, dst string) error {
 
 	if _, err = io.Copy(out, in); err != nil {
 		return fmt.Errorf("failed to copy file from %s to %s: %w", src, dst, err)
+	}
+
+	return nil
+}
+
+func (p *Pipeline) copyDirContents(srcDir, dstDir string) error {
+	entries, err := os.ReadDir(srcDir)
+	if err != nil {
+		return fmt.Errorf("failed to read source directory: %w", err)
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+
+		name := entry.Name()
+		srcPath := filepath.Join(srcDir, name)
+		dstPath := filepath.Join(dstDir, name)
+
+		if err := p.copyFile(srcPath, dstPath); err != nil {
+			return fmt.Errorf("failed to copy %s to temporary directory: %w", name, err)
+		}
 	}
 
 	return nil
