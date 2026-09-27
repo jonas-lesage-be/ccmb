@@ -25,20 +25,13 @@ builds:
       - -s -w
 
 archives:
-  - id: binary
-    formats:
-      - binary
-
-  - id: archive-zip
-    formats:
-      - zip
-    files:
-      - LICENSE
-      - README.md
-
-  - id: archive-tar-gz
+  - id: archive-zip-or-gzip
     formats:
       - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
     files:
       - LICENSE
       - README.md
@@ -110,7 +103,7 @@ winget:
       - cross-platform
 
     ids:
-      - binary
+      - archive-zip-or-gzip
 
     repository:
       owner: "jonas-lesage-be"
@@ -127,7 +120,7 @@ winget:
 chocolateys:
   - name: ccmb
     ids:
-      - archive-zip
+      - archive-zip-or-gzip
     tags: "llm context cli utility tool file-merger file-converter ffmpeg pdf ai foss admin"
 
     authors: "Jonas Lesage"
@@ -155,7 +148,7 @@ scoops:
       that flattens, filters, converts, and merges files.
     license: "MIT"
     ids:
-      - archive-zip
+      - archive-zip-or-gzip
 
     repository:
       owner: jonas-lesage-be
@@ -175,7 +168,7 @@ homebrew_casks:
     directory: Casks
 
     ids:
-      - archive-zip
+      - archive-zip-or-gzip
 
 nfpms:
   - id: ccmb-nfpm
