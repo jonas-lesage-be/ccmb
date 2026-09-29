@@ -34,3 +34,17 @@ jobs:
           version: "~> v2"
           args: release --snapshot --clean --skip=docker,winget,homebrew,scoop,nfpm,announce
       - run: ls -R dist | grep -i nupkg
+
+      - name: Verify nupkg contents and checksum
+        run: |
+          nupkg=$(find dist -name '*.nupkg' | head -n1)
+          echo "Package: $nupkg"
+          unzip -l "$nupkg"
+          echo "--- chocolateyinstall.ps1 ---"
+          unzip -p "$nupkg" tools/chocolateyinstall.ps1
+          zip=$(ls dist/*_windows_amd64.zip | head -n1)
+          sha=$(sha256sum "$zip" | cut -d' ' -f1)
+          echo "zip sha256: $sha"
+          unzip -p "$nupkg" tools/chocolateyinstall.ps1 | grep -qi "$sha" \
+            && echo "checksum in package matches zip" \
+            || { echo "CHECKSUM MISMATCH"; exit 1; }
