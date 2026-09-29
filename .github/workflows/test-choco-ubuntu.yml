@@ -1,5 +1,9 @@
 name: test-choco-ubuntu
-on: workflow_dispatch
+on:
+  push:
+    branches:
+      - chore/gh-actions-test
+  workflow_dispatch:
 jobs:
   test:
     runs-on: ubuntu-latest
