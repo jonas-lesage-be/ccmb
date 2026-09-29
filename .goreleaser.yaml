@@ -121,15 +121,17 @@ chocolateys:
   - name: ccmb
     ids:
       - archive-zip-or-gzip
-    tags: "llm context cli utility tool file-merger file-converter ffmpeg pdf ai foss admin"
 
+    project_url: "https://github.com/jonas-lesage-be/ccmb"
+    license_url: "https://github.com/jonas-lesage-be/ccmb/blob/main/LICENSE"
+    icon_url: "https://cdn.jsdelivr.net/gh/jonas-lesage-be/ccmb@main/icon.svg"
+
+    title: "Context Combiner (ccmb)"
     authors: "Jonas Lesage"
     owners: "Jonas Lesage"
     copyright: "Copyright (c) 2026 Jonas Lesage"
-    license_url: "https://github.com/jonas-lesage-be/ccmb/blob/main/LICENSE"
 
-    project_url: "https://github.com/jonas-lesage-be/ccmb"
-    icon_url: "https://cdn.jsdelivr.net/gh/jonas-lesage-be/ccmb@main/icon.svg"
+    tags: "llm context cli utility tool file-merger file-converter ffmpeg pdf ai foss admin"
     summary: >-
       Context Combiner (ccmb) is a command-line tool
       that flattens, filters, converts, and merges files.
