@@ -122,7 +122,10 @@ chocolateys:
     ids:
       - archive-zip-or-gzip
 
+    package_source_url: "https://github.com/jonas-lesage-be/ccmb"
     project_url: "https://github.com/jonas-lesage-be/ccmb"
+    docs_url: "https://github.com/jonas-lesage-be/ccmb/blob/main/README.md"
+    bug_tracker_url: "https://github.com/jonas-lesage-be/ccmb/issues"
     license_url: "https://github.com/jonas-lesage-be/ccmb/blob/main/LICENSE"
     icon_url: "https://cdn.jsdelivr.net/gh/jonas-lesage-be/ccmb@main/icon.svg"
 
@@ -139,7 +142,7 @@ chocolateys:
       Context Combiner (ccmb) is a command-line tool
       that flattens, filters, converts, and merges files
       from a source directory into a target directory.
-
+    release_notes: "https://github.com/jonas-lesage-be/ccmb/releases/tag/{{ .Version }}"
     api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
 
 scoops:
