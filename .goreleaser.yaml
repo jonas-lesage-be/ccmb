@@ -54,6 +54,10 @@ dockers_v2:
   - ids:
       - ccmb-build
 
+    platforms:
+      - linux/amd64
+      - linux/arm64
+
     images:
       - "contextcombiner/ccmb"
       - "ghcr.io/jonas-lesage-be/ccmb"
