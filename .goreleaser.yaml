@@ -103,7 +103,7 @@ winget:
     author: "Jonas Lesage"
     publisher_url: "https://github.com/jonas-lesage-be"
     publisher_support_url: "https://github.com/jonas-lesage-be/ccmb/issues"
-    copyright: "Copyright (c) 2026 Jonas Lesage"
+    copyright: "Copyright (c) {{ .Now.Year }} Jonas Lesage"
     copyright_url: "https://github.com/jonas-lesage-be/ccmb/blob/main/LICENSE"
 
     release_notes: "{{.Changelog}}"
@@ -164,7 +164,7 @@ chocolateys:
     title: "Context Combiner (ccmb)"
     authors: "Jonas Lesage"
     owners: "Jonas Lesage"
-    copyright: "Copyright (c) 2026 Jonas Lesage"
+    copyright: "Copyright (c) {{ .Now.Year }} Jonas Lesage"
 
     tags: "llm context cli utility tool file-merger file-converter ffmpeg pdf ai foss admin"
     summary: >-
