@@ -184,13 +184,19 @@ homebrew_casks:
       Context Combiner (ccmb) is a command-line tool
       that flattens, filters, converts, and merges files.
     license: "MIT"
+    ids:
+      - archive-zip-or-gzip
+    binaries:
+      - ccmb
+
+    caveats: |
+      If you experience Gatekeeper / quarantine issues on macOS, you can run:
+      xattr -dr com.apple.quarantine $(brew --prefix)/bin/ccmb
+
     repository:
       owner: jonas-lesage-be
       name: homebrew-tap
     directory: Casks
-
-    ids:
-      - archive-zip-or-gzip
 
 nfpms:
   - id: ccmb-nfpm
