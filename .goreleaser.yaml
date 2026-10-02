@@ -139,6 +139,7 @@ chocolateys:
       - archive-zip-or-gzip
 
     package_source_url: "https://github.com/jonas-lesage-be/ccmb"
+    project_source_url: "https://github.com/jonas-lesage-be/ccmb"
     project_url: "https://github.com/jonas-lesage-be/ccmb"
     docs_url: "https://github.com/jonas-lesage-be/ccmb/blob/main/README.md"
     bug_tracker_url: "https://github.com/jonas-lesage-be/ccmb/issues"
