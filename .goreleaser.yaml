@@ -81,7 +81,7 @@ winget:
 
     publisher: "Jonas Lesage"
     license: "MIT"
-    license_url: "https://github.com/jonas-lesage-be/ccmb/blob/main/README.md"
+    license_url: "https://github.com/jonas-lesage-be/ccmb/blob/main/LICENSE"
 
     short_description: >-
       Context Combiner (ccmb) is a command-line tool
