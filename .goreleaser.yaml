@@ -4,6 +4,7 @@ release:
   github:
     owner: jonas-lesage-be
     name: ccmb
+  prerelease: auto
   replace_existing_artifacts: true
 
 before:
