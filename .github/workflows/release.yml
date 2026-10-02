@@ -55,7 +55,18 @@ jobs:
           EOF
           sudo chmod +x /usr/local/bin/choco
 
-      - name: Run GoReleaser
+      - name: Pre-release
+        if: "contains(github.ref_name, '-')"
+        uses: goreleaser/goreleaser-action@v7
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean --skip=publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GORELEASER_GITHUB_TOKEN }}
+
+      - name: Stable release
+        if: "!contains(github.ref_name, '-')"
         uses: goreleaser/goreleaser-action@v7
         with:
           distribution: goreleaser
