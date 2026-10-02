@@ -66,11 +66,13 @@ dockers_v2:
       "org.opencontainers.image.description": >-
         Context Combiner (ccmb) is a command-line tool
         that flattens, filters, converts, and merges files.
-      "org.opencontainers.image.icon": "https://cdn.jsdelivr.net/gh/jonas-lesage-be/ccmb@main/icon.svg"
       "org.opencontainers.image.source": "https://github.com/jonas-lesage-be/ccmb"
+      "org.opencontainers.image.url": "https://github.com/jonas-lesage-be/ccmb"
+      "org.opencontainers.image.documentation": "https://github.com/jonas-lesage-be/ccmb/blob/main/README.md"
       "org.opencontainers.image.licenses": "MIT"
       "org.opencontainers.image.version": "{{ .Version }}"
       "org.opencontainers.image.revision": "{{ .FullCommit }}"
+      "org.opencontainers.image.created": "{{ .CommitDate }}"
 
 winget:
   - package_identifier: "ccmb.ccmb"
