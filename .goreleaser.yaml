@@ -77,9 +77,19 @@ dockers_v2:
 winget:
   - package_identifier: "ccmb.ccmb"
     name: "ccmb"
+    package_name: "Context Combiner (ccmb)"
     homepage: "https://github.com/jonas-lesage-be/ccmb"
 
     publisher: "Jonas Lesage"
+    author: "Jonas Lesage"
+    publisher_url: "https://github.com/jonas-lesage-be"
+    publisher_support_url: "https://github.com/jonas-lesage-be/ccmb/issues"
+    copyright: "Copyright (c) 2026 Jonas Lesage"
+    copyright_url: "https://github.com/jonas-lesage-be/ccmb/blob/main/LICENSE"
+
+    release_notes: "{{.Changelog}}"
+    release_notes_url: "https://github.com/jonas-lesage-be/ccmb/releases/tag/{{ .Version }}"
+
     license: "MIT"
     license_url: "https://github.com/jonas-lesage-be/ccmb/blob/main/LICENSE"
 
