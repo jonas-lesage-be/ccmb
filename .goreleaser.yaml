@@ -8,7 +8,7 @@ release:
 
 before:
   hooks:
-    - go mod tidy
+    - go mod download
 
 builds:
   - id: ccmb-build
@@ -21,6 +21,9 @@ builds:
     goarch:
       - amd64
       - arm64
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    flags:
+      - -trimpath
     ldflags:
       - -s -w
 
@@ -32,16 +35,28 @@ archives:
       - goos: windows
         formats:
           - zip
+    builds_info:
+      mtime: "{{ .CommitDate }}"
     files:
-      - LICENSE
-      - README.md
+      - src: LICENSE
+        info:
+          mtime: "{{ .CommitDate }}"
+      - src: README.md
+        info:
+          mtime: "{{ .CommitDate }}"
 
   - id: archive-tar-zst
     formats:
       - tar.zst
+    builds_info:
+      mtime: "{{ .CommitDate }}"
     files:
-      - LICENSE
-      - README.md
+      - src: LICENSE
+        info:
+          mtime: "{{ .CommitDate }}"
+      - src: README.md
+        info:
+          mtime: "{{ .CommitDate }}"
 
 changelog:
   sort: asc
