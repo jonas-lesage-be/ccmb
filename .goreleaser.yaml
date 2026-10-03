@@ -111,7 +111,7 @@ winget:
     copyright_url: "https://github.com/jonas-lesage-be/ccmb/blob/main/LICENSE"
 
     release_notes: "{{.Changelog}}"
-    release_notes_url: "https://github.com/jonas-lesage-be/ccmb/releases/tag/{{ .Version }}"
+    release_notes_url: "https://github.com/jonas-lesage-be/ccmb/releases/tag/v{{ .Version }}"
 
     license: "MIT"
     license_url: "https://github.com/jonas-lesage-be/ccmb/blob/main/LICENSE"
@@ -178,7 +178,7 @@ chocolateys:
       Context Combiner (ccmb) is a command-line tool
       that flattens, filters, converts, and merges files
       from a source directory into a target directory.
-    release_notes: "https://github.com/jonas-lesage-be/ccmb/releases/tag/{{ .Version }}"
+    release_notes: "https://github.com/jonas-lesage-be/ccmb/releases/tag/v{{ .Version }}"
     api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
 
 scoops:
