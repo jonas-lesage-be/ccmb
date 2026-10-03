@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -14,6 +15,12 @@ import (
 	"ccmb/internal/config"
 	"ccmb/internal/pipeline"
 	"ccmb/internal/version"
+)
+
+// ErrMissingConfig is returned when either the source or target directory is missing.
+var ErrMissingConfig = errors.New(
+	"missing required configuration: provide both source and target directories " +
+		"via command-line flags, environment variables, or a configuration file",
 )
 
 func description() string {
@@ -59,7 +66,13 @@ func NewCommand(ctx context.Context, v *viper.Viper) *cobra.Command {
 				return fmt.Errorf("failed to load configuration: %w", err)
 			}
 
+			if cfg.SourceDir == "" || cfg.TargetDir == "" {
+				return ErrMissingConfig
+			}
+
 			initLogger(cfg.Verbose)
+
+			cmd.SilenceUsage = true
 
 			p := pipeline.NewPipeline(cfg)
 			if err := p.Execute(ctx); err != nil {
