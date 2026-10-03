@@ -27,6 +27,9 @@ builds:
       - -trimpath
     ldflags:
       - -s -w
+      - -X ccmb/internal/version.Version={{.Version}}
+      - -X ccmb/internal/version.Commit={{.Commit}}
+      - -X ccmb/internal/version.BuildDate={{.CommitDate}}
 
 archives:
   - id: archive-zip-or-gzip

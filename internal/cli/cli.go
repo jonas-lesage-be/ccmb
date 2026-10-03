@@ -13,6 +13,7 @@ import (
 
 	"ccmb/internal/config"
 	"ccmb/internal/pipeline"
+	"ccmb/internal/version"
 )
 
 func description() string {
@@ -45,6 +46,7 @@ func NewCommand(ctx context.Context, v *viper.Viper) *cobra.Command {
 		Short:   "Context Combiner: flatten, filter, convert, and merge files.",
 		Long:    description(),
 		Example: exampleUsage(),
+		Version: version.Version,
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			configFile, err := cmd.Flags().GetString("config")
@@ -68,6 +70,7 @@ func NewCommand(ctx context.Context, v *viper.Viper) *cobra.Command {
 		},
 	}
 
+	cmd.SetVersionTemplate(version.String() + "\n")
 	cmd.SetContext(ctx)
 
 	flags := createFlags(cmd)
@@ -148,7 +151,7 @@ func createFlags(cmd *cobra.Command) *pflag.FlagSet {
 	flags.String("video-extensions", "", "Comma-separated video extensions to extract")
 	flags.String("visual-extensions", "", "Comma-separated visual extensions to merge")
 
-	flags.BoolP("verbose", "v", false, "Enable verbose logging")
+	flags.Bool("verbose", false, "Enable verbose logging")
 	flags.Bool("skip-flattener", false, "Skip the flattener")
 	flags.Bool("skip-tar-flattener", false, "Skip TAR flattener support")
 	flags.Bool("skip-document-converter", false, "Skip the document converter")

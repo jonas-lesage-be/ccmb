@@ -55,7 +55,7 @@ The application is configured via command-line flags that are parsed at startup.
 - **`--skip-video-extractor`**: Skips the video extractor.
 - **`--skip-visual-merger`**: Skips the visual merger.
 - **`--skip-text-merger`**: Skips the text merger.
-- **`-v, --verbose`**: Enable verbose logging.
+- **`--verbose`**: Enable verbose logging.
 
 ## Development
 
@@ -95,6 +95,7 @@ Ensure your local environment is configured with these project standards before 
     ├── pipeline/              # Orchestrates the sequential execution of the processing pipeline.
     ├── textmerge/             # Combines text streams into size-constrained text files.
     ├── units/                 # Defines file size units.
+    ├── version/               # Provides version information.
     ├── video/                 # Extracts image sequences from video files.
     └── visualmerge/           # Visual content merger that converts images and videos into PDFs.
 ```
